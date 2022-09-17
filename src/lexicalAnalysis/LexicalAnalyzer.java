@@ -1,12 +1,14 @@
-package lexicalanalysis;
+package lexicalAnalysis;
 
 import io.IOTool;
-import lexicalanalysis.lexical.Word;
+import lexicalAnalysis.lexical.Word;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class LexicalAnalyzer {
+
+    public static final boolean printLexicalAnalyzerData = true;  // 是否输出词法分析结果
 
     private StringBuffer codeBuffer;  // 原本的代码
 
@@ -17,11 +19,12 @@ public class LexicalAnalyzer {
     public LexicalAnalyzer(StringBuffer codeBuffer) {
 
         this.codeBuffer = codeBuffer;
-        token = new Token(codeBuffer);
-        words = new ArrayList<>();
-        this.analyse();
+        token = new Token(this.codeBuffer);
 
-        outputAnalysisResult();
+
+         words = new ArrayList<>();
+         this.analyse();
+        // outputAnalysisResult();
 
     }
 
@@ -29,22 +32,26 @@ public class LexicalAnalyzer {
         Word word;
         word = token.nextWord();
         while (word != null) {
-            System.out.println(word);
+//            System.out.println(word);
             words.add(word);
             word = token.nextWord();
         }
     }
 
     public void outputAnalysisResult() {
-        try {
-            IOTool.changeSystemoutToFile("output.txt");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         for (Word word : words) {
             System.out.println(word.getCategoryCode() + " " + word.getWordValue());
         }
 
+    }
+
+    public Word nextWord() {
+        Word word = token.nextWord();
+        return word;
+    }
+
+    public ArrayList<Word> getWords() {
+        return words;
     }
 }

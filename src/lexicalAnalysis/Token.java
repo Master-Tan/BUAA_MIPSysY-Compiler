@@ -1,12 +1,12 @@
-package lexicalanalysis;
+package lexicalAnalysis;
 
 import enums.CategoryCodeEnum.CategoryCode;
-import lexicalanalysis.lexical.FormatString;
-import lexicalanalysis.lexical.Ident;
-import lexicalanalysis.lexical.IntConst;
-import lexicalanalysis.lexical.Reserved;
-import lexicalanalysis.lexical.Separator;
-import lexicalanalysis.lexical.Word;
+import lexicalAnalysis.lexical.FormatString;
+import lexicalAnalysis.lexical.Ident;
+import lexicalAnalysis.lexical.IntConst;
+import lexicalAnalysis.lexical.Reserved;
+import lexicalAnalysis.lexical.Separator;
+import lexicalAnalysis.lexical.Word;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +37,7 @@ public class Token {
         if (index >= codeLength) {
             return null;
         }
+
 
         Pattern identPattern = Pattern.compile(Ident.PATTERN);
         Matcher identMatcher = identPattern.matcher(codeBuffer);

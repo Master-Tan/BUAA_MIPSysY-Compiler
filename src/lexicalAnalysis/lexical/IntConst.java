@@ -1,4 +1,4 @@
-package lexicalanalysis.lexical;
+package lexicalAnalysis.lexical;
 
 import enums.CategoryCodeEnum;
 
