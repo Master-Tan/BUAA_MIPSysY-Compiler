@@ -16,4 +16,9 @@ public class ConstInitValNode {
         this.constInitValNodes = null;
         this.constExpNode = constExpNode;
     }
+
+    public ConstInitValNode() {
+        this.constInitValNodes = null;
+        this.constExpNode = null;
+    }
 }

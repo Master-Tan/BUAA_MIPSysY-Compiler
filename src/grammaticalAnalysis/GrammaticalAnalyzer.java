@@ -148,7 +148,7 @@ public class GrammaticalAnalyzer {
             funcFParamNode = new FuncFParamNode(ident);
         }
 
-        printGrammaticalData("FuncFParams");
+        printGrammaticalData("FuncFParam");
 
         return funcFParamNode;
     }
@@ -231,22 +231,32 @@ public class GrammaticalAnalyzer {
             printWord(words.get(index));
             index++;
 
-            ArrayList<ConstInitValNode> constInitValNodes = new ArrayList<>();
-            ConstInitValNode node = constInitVal();
-            constInitValNodes.add(node);
+            if (words.get(index).isRbrace()) {
 
-            while (words.get(index).isComma()) {
                 printWord(words.get(index));
                 index++;
 
-                constInitvalNode = constInitVal();
-                constInitValNodes.add(constInitvalNode);
+                constInitvalNode = new ConstInitValNode();
+
+            } else {
+                ArrayList<ConstInitValNode> constInitValNodes = new ArrayList<>();
+                ConstInitValNode node = constInitVal();
+                constInitValNodes.add(node);
+
+                while (words.get(index).isComma()) {
+                    printWord(words.get(index));
+                    index++;
+
+                    constInitvalNode = constInitVal();
+                    constInitValNodes.add(constInitvalNode);
+                }
+
+                printWord(words.get(index));
+                index++;
+
+                constInitvalNode = new ConstInitValNode(constInitValNodes);
             }
 
-            printWord(words.get(index));
-            index++;
-
-            constInitvalNode = new ConstInitValNode(constInitValNodes);
         } else {
             ConstExpNode constExpNode = constExp();
 
@@ -262,6 +272,8 @@ public class GrammaticalAnalyzer {
 
         AddExpNode addExpNode = addExp();
         ConstExpNode constExpNode = new ConstExpNode(addExpNode);
+
+        printGrammaticalData("ConstExp");
 
         return constExpNode;
     }
@@ -595,7 +607,6 @@ public class GrammaticalAnalyzer {
         while (!words.get(index).isRbrace()) {
             BlockItemNode blockItemNode = blockItem();
             blockItemNodes.add(blockItemNode);
-
         }
 
         printWord(words.get(index));
@@ -662,7 +673,7 @@ public class GrammaticalAnalyzer {
             printWord(words.get(index));
             index++;
 
-            if (words.get(index).isRbrack()) {
+            if (words.get(index).isSemicn()) {
                 printWord(words.get(index));
                 index++;
 
@@ -728,9 +739,11 @@ public class GrammaticalAnalyzer {
                 stmtNode = new StmtBranchNode(condNode, node);
             }
         } else if (words.get(index).isLbrace()) {
+
             BlockNode blockNode = block();
 
             stmtNode = new StmtBlockNode(blockNode);
+
         } else {
             int opt = index;
             boolean flag = false;
@@ -793,6 +806,8 @@ public class GrammaticalAnalyzer {
         LOrExpNode lOrExpNode = lOrExp();
 
         CondNode condNode = new CondNode(lOrExpNode);
+
+        printGrammaticalData("Cond");
 
         return condNode;
     }

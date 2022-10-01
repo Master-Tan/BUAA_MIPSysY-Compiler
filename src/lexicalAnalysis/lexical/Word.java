@@ -60,7 +60,7 @@ public class Word {
     }
 
     public boolean isContinue() {
-        return this.categoryCode == CategoryCode.INTTK;
+        return this.categoryCode == CategoryCode.CONTINUETK;
     }
 
     public boolean isIf() {

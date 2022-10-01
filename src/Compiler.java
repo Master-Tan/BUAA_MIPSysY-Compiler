@@ -18,11 +18,11 @@ public class Compiler {
             e.printStackTrace();
         }
 
-//        try {
-//            IOTool.changeSystemoutToFile("output.txt");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            IOTool.changeSystemoutToFile("output.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         LexicalAnalyzer myLexicalAnalyzer = new LexicalAnalyzer(codeBuffer);
 
