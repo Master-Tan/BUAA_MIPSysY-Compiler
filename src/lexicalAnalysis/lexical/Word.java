@@ -1,6 +1,6 @@
 package lexicalAnalysis.lexical;
 
-import enums.CategoryCodeEnum.CategoryCode;
+import myclasses.CategoryCodeEnum.CategoryCode;
 
 public class Word {
 

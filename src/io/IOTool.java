@@ -24,4 +24,9 @@ public class IOTool {
         System.setOut(out);
     }
 
+    public static void changeSystemErrToFile(String outputPath) throws IOException {
+        PrintStream out = new PrintStream(outputPath);
+        System.setErr(out);
+    }
+
 }

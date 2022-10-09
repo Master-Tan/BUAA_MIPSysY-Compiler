@@ -1,6 +1,8 @@
 package grammaticalAnalysis;
 
+import exceptions.SysYException;
 import grammaticalAnalysis.grammatical.*;
+import grammaticalAnalysis.grammatical.Stmt.*;
 import lexicalAnalysis.LexicalAnalyzer;
 import lexicalAnalysis.lexical.Word;
 
@@ -8,17 +10,24 @@ import java.util.ArrayList;
 
 public class GrammaticalAnalyzer {
 
-    public static final boolean printGrammaticalAnalyzerData = true;  // 是否输出语法分析结果
+    public static final boolean printGrammaticalAnalyzerData = false;  // 是否输出语法分析结果
 
     private ArrayList<Word> words;
     private int index;
     private int wordsLength;
+    private int line;
+
+    private SymbolTable currentSymbolTable;
 
     public GrammaticalAnalyzer(ArrayList<Word> words) {
 
         this.words = words;
         this.index = 0;
         this.wordsLength = this.words.size();
+        this.line = 1;
+
+        SymbolTable initSymbolTable = new SymbolTable();
+        currentSymbolTable = initSymbolTable;
 
         CompUnitNode compUnitNode = compUnit();  // 语法树根结点
 
@@ -35,8 +44,10 @@ public class GrammaticalAnalyzer {
             FuncDefNode funcDefNode = funcDef();
             funcDefNodes.add(funcDefNode);
         }
+
         MainFuncDefNode mainFuncDefNode = mainFuncDef();
-        CompUnitNode compUnitNode = new CompUnitNode(declNodes, funcDefNodes, mainFuncDefNode);
+
+        CompUnitNode compUnitNode = new CompUnitNode(declNodes, funcDefNodes, mainFuncDefNode, line);
 
         printGrammaticalData("CompUnit");
 
@@ -51,30 +62,32 @@ public class GrammaticalAnalyzer {
 
         Word ident = words.get(index);
         printWord(ident);
-        index++;
 
         printWord(words.get(index));
-        index++;
+
+        currentSymbolTable.toChild();
 
         if (words.get(index).isRParent()) {
             printWord(words.get(index));
-            index++;
 
             BlockNode blockNode = block();
 
-            funcDefNode = new FuncDefNode(funcTypeNode, ident, blockNode);
+            funcDefNode = new FuncDefNode(funcTypeNode, ident, blockNode, line);
         } else {
             FuncFParamsNode funcFParamsNode = funcFParams();
 
             printWord(words.get(index));
-            index++;
 
             BlockNode blockNode = block();
 
-            funcDefNode = new FuncDefNode(funcTypeNode, ident, funcFParamsNode, blockNode);
+            funcDefNode = new FuncDefNode(funcTypeNode, ident, funcFParamsNode, blockNode, line);
         }
 
         printGrammaticalData("FuncDef");
+
+        if (!funcDefNode.checkErrorB(currentSymbolTable)) {
+            currentSymbolTable.addVar(funcDefNode.getIdent().getWordValue(), funcDefNode);
+        }
 
         return funcDefNode;
     }
@@ -83,9 +96,8 @@ public class GrammaticalAnalyzer {
 
         Word reserved = words.get(index);
         printWord(reserved);
-        index++;
 
-        FuncTypeNode funcTypeNode = new FuncTypeNode(reserved);
+        FuncTypeNode funcTypeNode = new FuncTypeNode(reserved, line);
 
         printGrammaticalData("FuncType");
 
@@ -100,13 +112,13 @@ public class GrammaticalAnalyzer {
 
         while (words.get(index).isComma()) {
             printWord(words.get(index));
-            index++;
 
             funcFParamNode = funcFParam();
             funcFParamNodes.add(funcFParamNode);
+
         }
 
-        FuncFParamsNode funcFParamsNode = new FuncFParamsNode(funcFParamNodes);
+        FuncFParamsNode funcFParamsNode = new FuncFParamsNode(funcFParamNodes, line);
 
         printGrammaticalData("FuncFParams");
 
@@ -118,37 +130,33 @@ public class GrammaticalAnalyzer {
         FuncFParamNode funcFParamNode = null;
 
         printWord(words.get(index));
-        index++;
 
         Word ident = words.get(index);
         printWord(ident);
-        index++;
 
         if (words.get(index).isLbrack()) {
 
             printWord(words.get(index));
-            index++;
             printWord(words.get(index));
-            index++;
 
             ArrayList<ConstExpNode> constExpNodes = new ArrayList<>();
             while (words.get(index).isLbrack()) {
                 printWord(words.get(index));
-                index++;
 
                 ConstExpNode constExpNode = constExp();
                 constExpNodes.add(constExpNode);
 
                 printWord(words.get(index));
-                index++;
             }
 
-            funcFParamNode = new FuncFParamNode(ident, constExpNodes);
+            funcFParamNode = new FuncFParamNode(ident, constExpNodes, line);
         } else {
-            funcFParamNode = new FuncFParamNode(ident);
+            funcFParamNode = new FuncFParamNode(ident, line);
         }
 
         printGrammaticalData("FuncFParam");
+
+        currentSymbolTable.addVar(funcFParamNode.getIdent().getWordValue(), funcFParamNode);
 
         return funcFParamNode;
     }
@@ -158,10 +166,10 @@ public class GrammaticalAnalyzer {
         DeclNode declNode = null;
         if (isConstDecl()) {
             ConstDeclNode constDeclNode = constDecl();
-            declNode = new DeclNode(constDeclNode);
+            declNode = new DeclNode(constDeclNode, line);
         } else if (isVarDecl()) {
             VarDeclNode varDeclNode = varDecl();
-            declNode = new DeclNode(varDeclNode);
+            declNode = new DeclNode(varDeclNode, line);
         }
         return declNode;
     }
@@ -169,25 +177,22 @@ public class GrammaticalAnalyzer {
     private ConstDeclNode constDecl() {
 
         printWord(words.get(index));
-        index++;
         printWord(words.get(index));
-        index++;
 
         ArrayList<ConstDefNode> constDefNodes = new ArrayList<>();
         ConstDefNode constDefNode = constDef();
         constDefNodes.add(constDefNode);
+
         while (words.get(index).isComma()) {
             printWord(words.get(index));
-            index++;
 
             constDefNode = constDef();
             constDefNodes.add(constDefNode);
         }
 
         printWord(words.get(index));
-        index++;
 
-        ConstDeclNode constDeclNode = new ConstDeclNode(constDefNodes);
+        ConstDeclNode constDeclNode = new ConstDeclNode(constDefNodes, line);
 
         printGrammaticalData("ConstDecl");
 
@@ -198,28 +203,26 @@ public class GrammaticalAnalyzer {
 
         Word ident = words.get(index);
         printWord(ident);
-        index++;
 
         ArrayList<ConstExpNode> constExpNodes = new ArrayList<>();
         while (words.get(index).isLbrack()) {
             printWord(words.get(index));
-            index++;
 
             ConstExpNode constExpNode = constExp();
             constExpNodes.add(constExpNode);
 
             printWord(words.get(index));
-            index++;
         }
 
         printWord(words.get(index));
-        index++;
 
         ConstInitValNode constInitvalNode = constInitVal();
 
-        ConstDefNode constDefNode = new ConstDefNode(ident, constExpNodes, constInitvalNode);
+        ConstDefNode constDefNode = new ConstDefNode(ident, constExpNodes, constInitvalNode, line);
 
         printGrammaticalData("ConstDef");
+
+        currentSymbolTable.addVar(constDefNode.getIdent().getWordValue(), constDefNode);
 
         return constDefNode;
     }
@@ -229,14 +232,12 @@ public class GrammaticalAnalyzer {
 
         if (words.get(index).isLbrace()) {
             printWord(words.get(index));
-            index++;
 
             if (words.get(index).isRbrace()) {
 
                 printWord(words.get(index));
-                index++;
 
-                constInitvalNode = new ConstInitValNode();
+                constInitvalNode = new ConstInitValNode(line);
 
             } else {
                 ArrayList<ConstInitValNode> constInitValNodes = new ArrayList<>();
@@ -245,22 +246,20 @@ public class GrammaticalAnalyzer {
 
                 while (words.get(index).isComma()) {
                     printWord(words.get(index));
-                    index++;
 
                     constInitvalNode = constInitVal();
                     constInitValNodes.add(constInitvalNode);
                 }
 
                 printWord(words.get(index));
-                index++;
 
-                constInitvalNode = new ConstInitValNode(constInitValNodes);
+                constInitvalNode = new ConstInitValNode(constInitValNodes, line);
             }
 
         } else {
             ConstExpNode constExpNode = constExp();
 
-            constInitvalNode = new ConstInitValNode(constExpNode);
+            constInitvalNode = new ConstInitValNode(constExpNode, line);
         }
 
         printGrammaticalData("ConstInitVal");
@@ -271,7 +270,7 @@ public class GrammaticalAnalyzer {
     private ConstExpNode constExp() {
 
         AddExpNode addExpNode = addExp();
-        ConstExpNode constExpNode = new ConstExpNode(addExpNode);
+        ConstExpNode constExpNode = new ConstExpNode(addExpNode, line);
 
         printGrammaticalData("ConstExp");
 
@@ -281,17 +280,16 @@ public class GrammaticalAnalyzer {
     private AddExpNode addExp() {
 
         MulExpNode mulExpNode = mulExp();
-        AddExpNode addExpNode = new AddExpNode(mulExpNode);
+        AddExpNode addExpNode = new AddExpNode(mulExpNode, line);
 
         while (words.get(index).isPlus() || words.get(index).isMinu()) {
             printGrammaticalData("AddExp");
 
             Word separator = words.get(index);
             printWord(separator);
-            index++;
 
             mulExpNode = mulExp();
-            addExpNode = new AddExpNode(addExpNode, separator, mulExpNode);
+            addExpNode = new AddExpNode(addExpNode, separator, mulExpNode, line);
         }
 
         printGrammaticalData("AddExp");
@@ -302,7 +300,9 @@ public class GrammaticalAnalyzer {
     private MulExpNode mulExp() {
 
         UnaryExpNode unaryExpNode = unaryExp();
-        MulExpNode mulExpNode = new MulExpNode(unaryExpNode);
+
+
+        MulExpNode mulExpNode = new MulExpNode(unaryExpNode, line);
 
         while (words.get(index).isMult() ||
                 words.get(index).isDiv() ||
@@ -311,10 +311,10 @@ public class GrammaticalAnalyzer {
 
             Word separator = words.get(index);
             printWord(separator);
-            index++;
 
             unaryExpNode = unaryExp();
-            mulExpNode = new MulExpNode(mulExpNode, separator, unaryExpNode);
+
+            mulExpNode = new MulExpNode(mulExpNode, separator, unaryExpNode, line);
         }
 
         printGrammaticalData("MulExp");
@@ -330,37 +330,37 @@ public class GrammaticalAnalyzer {
             UnaryOpNode unaryOpNode = unaryOp();
             UnaryExpNode node = unaryExp();
 
-            unaryExpNode = new UnaryExpNode(unaryOpNode, node);
+            unaryExpNode = new UnaryExpNode(unaryOpNode, node, line);
 
         } else if (words.get(index).isIdent() && words.get(index + 1).isLparent()) {
 
             Word ident = words.get(index);
             printWord(ident);
-            index++;
 
             printWord(words.get(index));
-            index++;
 
             if (words.get(index).isRParent()) {
                 printWord(words.get(index));
-                index++;
 
-                unaryExpNode = new UnaryExpNode(ident);
+                unaryExpNode = new UnaryExpNode(ident, line);
             } else {
                 FuncRParamsNode funcRParamsNode = funcRParams();
 
                 printWord(words.get(index));
-                index++;
 
-                unaryExpNode = new UnaryExpNode(ident, funcRParamsNode);
+                unaryExpNode = new UnaryExpNode(ident, funcRParamsNode, line);
             }
 
         } else {
             PrimaryExpNode primaryExpNode = primaryExp();
-            unaryExpNode = new UnaryExpNode(primaryExpNode);
+            unaryExpNode = new UnaryExpNode(primaryExpNode, line);
         }
 
         printGrammaticalData("UnaryExp");
+
+        unaryExpNode.checkErrorC(currentSymbolTable);
+        unaryExpNode.checkErrorD(currentSymbolTable);
+        unaryExpNode.checkErrorE(currentSymbolTable);
 
         return unaryExpNode;
     }
@@ -369,9 +369,8 @@ public class GrammaticalAnalyzer {
 
         Word separator = words.get(index);
         printWord(separator);
-        index++;
 
-        UnaryOpNode unaryOpNode = new UnaryOpNode(separator);
+        UnaryOpNode unaryOpNode = new UnaryOpNode(separator, line);
 
         printGrammaticalData("UnaryOp");
 
@@ -386,14 +385,13 @@ public class GrammaticalAnalyzer {
         expNodes.add(expNode);
         while (words.get(index).isComma()) {
             printWord(words.get(index));
-            index++;
 
             expNode = exp();
             expNodes.add(expNode);
 
         }
 
-        FuncRParamsNode funcRParamsNode = new FuncRParamsNode(expNodes);
+        FuncRParamsNode funcRParamsNode = new FuncRParamsNode(expNodes, line);
 
         printGrammaticalData("FuncRParams");
 
@@ -405,23 +403,22 @@ public class GrammaticalAnalyzer {
         PrimaryExpNode primaryExpNode = null;
         if (words.get(index).isLparent()) {
             printWord(words.get(index));
-            index++;
 
             ExpNode expNode = exp();
-            primaryExpNode = new PrimaryExpNode(expNode);
+            primaryExpNode = new PrimaryExpNode(expNode, line);
 
             printWord(words.get(index));
-            index++;
 
         } else if (words.get(index).isIdent()) {
 
             LValNode lValNode = lVal();
-            primaryExpNode = new PrimaryExpNode(lValNode);
+
+            primaryExpNode = new PrimaryExpNode(lValNode, line);
 
         } else if (words.get(index).isIntConst()) {
 
             NumberNode numberNode = number();
-            primaryExpNode = new PrimaryExpNode(numberNode);
+            primaryExpNode = new PrimaryExpNode(numberNode, line);
 
         }
 
@@ -433,7 +430,7 @@ public class GrammaticalAnalyzer {
     private ExpNode exp() {
 
         AddExpNode addExpNode = addExp();
-        ExpNode expNode = new ExpNode(addExpNode);
+        ExpNode expNode = new ExpNode(addExpNode, line);
 
         printGrammaticalData("Exp");
 
@@ -444,23 +441,22 @@ public class GrammaticalAnalyzer {
 
         Word ident = words.get(index);
         printWord(ident);
-        index++;
 
         ArrayList<ExpNode> expNodes = new ArrayList<>();
         while (words.get(index).isLbrack()) {
             printWord(words.get(index));
-            index++;
 
             ExpNode expNode = exp();
             expNodes.add(expNode);
 
             printWord(words.get(index));
-            index++;
         }
 
-        LValNode lValNode = new LValNode(ident, expNodes);
+        LValNode lValNode = new LValNode(ident, expNodes, line);
 
         printGrammaticalData("LVal");
+
+        lValNode.checkErrorC(currentSymbolTable);
 
         return lValNode;
     }
@@ -469,9 +465,8 @@ public class GrammaticalAnalyzer {
 
         Word intConst = words.get(index);
         printWord(intConst);
-        index++;
 
-        NumberNode numberNode = new NumberNode(intConst);
+        NumberNode numberNode = new NumberNode(intConst, line);
 
         printGrammaticalData("Number");
 
@@ -481,14 +476,13 @@ public class GrammaticalAnalyzer {
     private VarDeclNode varDecl() {
 
         printWord(words.get(index));
-        index++;
 
         ArrayList<VarDefNode> varDefNodes = new ArrayList<>();
         VarDefNode varDefNode = varDef();
         varDefNodes.add(varDefNode);
+
         while (words.get(index).isComma()) {
             printWord(words.get(index));
-            index++;
 
             varDefNode = varDef();
             varDefNodes.add(varDefNode);
@@ -496,9 +490,8 @@ public class GrammaticalAnalyzer {
 
         // ';'
         printWord(words.get(index));
-        index++;
 
-        VarDeclNode varDeclNode = new VarDeclNode(varDefNodes);
+        VarDeclNode varDeclNode = new VarDeclNode(varDefNodes, line);
 
         printGrammaticalData("VarDecl");
 
@@ -509,34 +502,32 @@ public class GrammaticalAnalyzer {
 
         Word ident = words.get(index);
         printWord(ident);
-        index++;
 
         VarDefNode varDefNode = null;
 
         ArrayList<ConstExpNode> constExpNodes = new ArrayList<>();
         while (words.get(index).isLbrack()) {
             printWord(words.get(index));
-            index++;
 
             ConstExpNode constExpNode = constExp();
             constExpNodes.add(constExpNode);
 
             printWord(words.get(index));
-            index++;
         }
 
         if (words.get(index).isAssign()) {
             printWord(words.get(index));
-            index++;
 
             InitValNode initValNode = initVal();
-            varDefNode = new VarDefNode(constExpNodes, initValNode);
+            varDefNode = new VarDefNode(ident, constExpNodes, initValNode, line);
 
         } else {
-            varDefNode = new VarDefNode(constExpNodes);
+            varDefNode = new VarDefNode(ident, constExpNodes, line);
         }
 
         printGrammaticalData("VarDef");
+
+        currentSymbolTable.addVar(varDefNode.getIdent().getWordValue(), varDefNode);
 
         return varDefNode;
     }
@@ -547,11 +538,11 @@ public class GrammaticalAnalyzer {
 
         if (words.get(index).isLbrace()) {
             printWord(words.get(index));
-            index++;
+
             if (words.get(index).isRbrace()) {
                 printWord(words.get(index));
-                index++;
-                initValNode = new InitValNode();
+
+                initValNode = new InitValNode(line);
             } else {
                 ArrayList<InitValNode> nodes = new ArrayList<>();
                 InitValNode node = initVal();
@@ -559,19 +550,18 @@ public class GrammaticalAnalyzer {
 
                 while (words.get(index).isComma()) {
                     printWord(words.get(index));
-                    index++;
 
                     node = initVal();
                     nodes.add(node);
                 }
 
                 printWord(words.get(index));
-                index++;
-                initValNode = new InitValNode(nodes);
+
+                initValNode = new InitValNode(nodes, line);
             }
         } else {
             ExpNode expNode = exp();
-            initValNode = new InitValNode(expNode);
+            initValNode = new InitValNode(expNode, line);
         }
 
         printGrammaticalData("InitVal");
@@ -580,27 +570,30 @@ public class GrammaticalAnalyzer {
     }
 
     private MainFuncDefNode mainFuncDef() {
+        currentSymbolTable.toChild();
 
         printWord(words.get(index));
-        index++;
+
+        Word ident = words.get(index);
+        printWord(ident);
+
         printWord(words.get(index));
-        index++;
         printWord(words.get(index));
-        index++;
-        printWord(words.get(index));
-        index++;
 
         BlockNode blockNode = block();
-        MainFuncDefNode mainFuncDefNode = new MainFuncDefNode(blockNode);
+        MainFuncDefNode mainFuncDefNode = new MainFuncDefNode(ident, blockNode, line);
 
         printGrammaticalData("MainFuncDef");
+
+        if (!mainFuncDefNode.checkErrorB(currentSymbolTable)) {
+            currentSymbolTable.addVar(mainFuncDefNode.getIdent().getWordValue(), mainFuncDefNode);
+        }
 
         return mainFuncDefNode;
     }
 
     private BlockNode block() {
         printWord(words.get(index));
-        index++;
 
         ArrayList<BlockItemNode> blockItemNodes = new ArrayList<>();
 
@@ -610,11 +603,12 @@ public class GrammaticalAnalyzer {
         }
 
         printWord(words.get(index));
-        index++;
 
-        BlockNode blockNode = new BlockNode(blockItemNodes);
+        BlockNode blockNode = new BlockNode(blockItemNodes, line);
 
         printGrammaticalData("Block");
+
+        currentSymbolTable.back();
 
         return blockNode;
     }
@@ -626,12 +620,12 @@ public class GrammaticalAnalyzer {
         if (isDecl()) {
 
             DeclNode declNode = decl();
-            blockItemNode = new BlockItemNode(declNode);
+            blockItemNode = new BlockItemNode(declNode, line);
 
         } else {
 
             StmtNode stmtNode = stmt();
-            blockItemNode = new BlockItemNode(stmtNode);
+            blockItemNode = new BlockItemNode(stmtNode, line);
 
         }
 
@@ -644,105 +638,86 @@ public class GrammaticalAnalyzer {
 
         if (words.get(index).isPrintf()) {
             printWord(words.get(index));
-            index++;
             printWord(words.get(index));
-            index++;
 
             // String
             Word formatString = words.get(index);
             printWord(formatString);
-            index++;
 
             ArrayList<ExpNode> expNodes = new ArrayList<>();
 
             while (words.get(index).isComma()) {
                 printWord(words.get(index));
-                index++;
 
                 ExpNode expNode = exp();
                 expNodes.add(expNode);
             }
 
             printWord(words.get(index));
-            index++;
             printWord(words.get(index));
-            index++;
 
-            stmtNode = new StmtPrintfNode(formatString, expNodes);
+            stmtNode = new StmtPrintfNode(formatString, expNodes, line);
         } else if (words.get(index).isReturn()) {
             printWord(words.get(index));
-            index++;
 
             if (words.get(index).isSemicn()) {
                 printWord(words.get(index));
-                index++;
 
-                stmtNode = new StmtReturnNode();
+                stmtNode = new StmtReturnNode(line);
             } else {
                 ExpNode expNode = exp();
 
                 printWord(words.get(index));
-                index++;
 
-                stmtNode = new StmtReturnNode(expNode);
+                stmtNode = new StmtReturnNode(expNode, line);
             }
         } else if (words.get(index).isBreak()) {
 
             printWord(words.get(index));
-            index++;
             printWord(words.get(index));
-            index++;
 
-            stmtNode = new StmtBreakNode();
+            stmtNode = new StmtBreakNode(line);
         } else if (words.get(index).isContinue()) {
 
             printWord(words.get(index));
-            index++;
             printWord(words.get(index));
-            index++;
 
-            stmtNode = new StmtContinueNode();
+            stmtNode = new StmtContinueNode(line);
         } else if (words.get(index).isWhile()) {
             printWord(words.get(index));
-            index++;
             printWord(words.get(index));
-            index++;
 
             CondNode condNode = cond();
 
             printWord(words.get(index));
-            index++;
 
             StmtNode node = stmt();
 
-            stmtNode = new StmtLoopNode(condNode, node);
+            stmtNode = new StmtLoopNode(condNode, node, line);
         } else if (words.get(index).isIf()) {
             printWord(words.get(index));
-            index++;
             printWord(words.get(index));
-            index++;
 
             CondNode condNode = cond();
 
             printWord(words.get(index));
-            index++;
 
             StmtNode node = stmt();
 
             if (words.get(index).isElse()) {
                 printWord(words.get(index));
-                index++;
 
                 StmtNode node2 = stmt();
-                stmtNode = new StmtBranchNode(condNode, node, node2);
+                stmtNode = new StmtBranchNode(condNode, node, node2, line);
             } else {
-                stmtNode = new StmtBranchNode(condNode, node);
+                stmtNode = new StmtBranchNode(condNode, node, line);
             }
         } else if (words.get(index).isLbrace()) {
+            currentSymbolTable.toChild();
 
             BlockNode blockNode = block();
 
-            stmtNode = new StmtBlockNode(blockNode);
+            stmtNode = new StmtBlockNode(blockNode, line);
 
         } else {
             int opt = index;
@@ -757,41 +732,33 @@ public class GrammaticalAnalyzer {
                 LValNode lValNode = lVal();
 
                 printWord(words.get(index));
-                index++;
 
                 if (words.get(index).isGetint()) {
                     printWord(words.get(index));
-                    index++;
                     printWord(words.get(index));
-                    index++;
                     printWord(words.get(index));
-                    index++;
                     printWord(words.get(index));
-                    index++;
 
-                    stmtNode = new StmtGetIntNode(lValNode);
+                    stmtNode = new StmtGetIntNode(lValNode, line);
                 } else {
                     ExpNode expNode = exp();
 
                     printWord(words.get(index));
-                    index++;
 
-                    stmtNode = new StmtAssignNode(lValNode, expNode);
+                    stmtNode = new StmtAssignNode(lValNode, expNode, line);
                 }
             } else {
                 if (words.get(index).isSemicn()) {
 
                     printWord(words.get(index));
-                    index++;
 
-                    stmtNode = new StmtExprNode();
+                    stmtNode = new StmtExprNode(line);
                 } else {
                     ExpNode expNode = exp();
 
                     printWord(words.get(index));
-                    index++;
 
-                    stmtNode = new StmtExprNode(expNode);
+                    stmtNode = new StmtExprNode(expNode, line);
                 }
             }
         }
@@ -805,7 +772,7 @@ public class GrammaticalAnalyzer {
 
         LOrExpNode lOrExpNode = lOrExp();
 
-        CondNode condNode = new CondNode(lOrExpNode);
+        CondNode condNode = new CondNode(lOrExpNode, line);
 
         printGrammaticalData("Cond");
 
@@ -815,16 +782,15 @@ public class GrammaticalAnalyzer {
     private LOrExpNode lOrExp() {
 
         LAndExpNode lAndExpNode = lAndExp();
-        LOrExpNode lOrExpNode = new LOrExpNode(lAndExpNode);
+        LOrExpNode lOrExpNode = new LOrExpNode(lAndExpNode, line);
 
         while (words.get(index).isOr()) {
             printGrammaticalData("LOrExp");
 
             printWord(words.get(index));
-            index++;
 
             lAndExpNode = lAndExp();
-            lOrExpNode = new LOrExpNode(lOrExpNode, lAndExpNode);
+            lOrExpNode = new LOrExpNode(lOrExpNode, lAndExpNode, line);
         }
 
         printGrammaticalData("LOrExp");
@@ -836,16 +802,15 @@ public class GrammaticalAnalyzer {
     private LAndExpNode lAndExp() {
 
         EqExpNode eqExpNode = eqExp();
-        LAndExpNode lAndExpNode = new LAndExpNode(eqExpNode);
+        LAndExpNode lAndExpNode = new LAndExpNode(eqExpNode, line);
 
         while (words.get(index).isAnd()) {
             printGrammaticalData("LAndExp");
 
             printWord(words.get(index));
-            index++;
 
             eqExpNode = eqExp();
-            lAndExpNode = new LAndExpNode(lAndExpNode, eqExpNode);
+            lAndExpNode = new LAndExpNode(lAndExpNode, eqExpNode, line);
         }
 
         printGrammaticalData("LAndExp");
@@ -857,17 +822,16 @@ public class GrammaticalAnalyzer {
     private EqExpNode eqExp() {
 
         RelExpNode relExpNode = relExp();
-        EqExpNode eqExpNode = new EqExpNode(relExpNode);
+        EqExpNode eqExpNode = new EqExpNode(relExpNode, line);
 
         while (words.get(index).isEql() || words.get(index).isNeq()) {
             printGrammaticalData("EqExp");
 
             Word separator = words.get(index);
             printWord(separator);
-            index++;
 
             relExpNode = relExp();
-            eqExpNode = new EqExpNode(eqExpNode, separator, relExpNode);
+            eqExpNode = new EqExpNode(eqExpNode, separator, relExpNode, line);
         }
 
         printGrammaticalData("EqExp");
@@ -879,7 +843,7 @@ public class GrammaticalAnalyzer {
     private RelExpNode relExp() {
 
         AddExpNode addExpNode = addExp();
-        RelExpNode relExpNode = new RelExpNode(addExpNode);
+        RelExpNode relExpNode = new RelExpNode(addExpNode, line);
 
         while (words.get(index).isLss() ||
                 words.get(index).isLeq() ||
@@ -889,10 +853,9 @@ public class GrammaticalAnalyzer {
 
             Word separator = words.get(index);
             printWord(separator);
-            index++;
 
             addExpNode = addExp();
-            relExpNode = new RelExpNode(relExpNode, separator, addExpNode);
+            relExpNode = new RelExpNode(relExpNode, separator, addExpNode, line);
         }
 
         printGrammaticalData("RelExp");
@@ -946,6 +909,11 @@ public class GrammaticalAnalyzer {
     private void printWord(Word word) {
         if (LexicalAnalyzer.printLexicalAnalyzerData) {
             System.out.println(word.getCategoryCode() + " " + word.getWordValue());
+        }
+        index++;
+        if (index < wordsLength) {
+            line = words.get(index).getLineNumber();
+//            System.out.println(line);
         }
     }
 

@@ -2,11 +2,12 @@ package grammaticalAnalysis.grammatical;
 
 import java.util.ArrayList;
 
-public class VarDeclNode {
+public class VarDeclNode extends Node {
 
     private ArrayList<VarDefNode> varDefNodes;
 
-    public VarDeclNode(ArrayList<VarDefNode> varDefNodes) {
+    public VarDeclNode(ArrayList<VarDefNode> varDefNodes, int line) {
+        super(line);
         this.varDefNodes = varDefNodes;
     }
 

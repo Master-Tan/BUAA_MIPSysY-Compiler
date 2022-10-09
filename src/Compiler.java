@@ -1,10 +1,14 @@
+import exceptions.SysYException;
 import grammaticalAnalysis.GrammaticalAnalyzer;
+import grammaticalAnalysis.grammatical.Node;
 import io.IOTool;
 import lexicalAnalysis.LexicalAnalyzer;
 import lexicalAnalysis.lexical.Word;
+import myclasses.Pair;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class Compiler {
 
@@ -18,8 +22,14 @@ public class Compiler {
             e.printStackTrace();
         }
 
+//        try {
+//            IOTool.changeSystemoutToFile("output.txt");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
         try {
-            IOTool.changeSystemoutToFile("output.txt");
+            IOTool.changeSystemErrToFile("error.txt");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -30,7 +40,19 @@ public class Compiler {
                 new GrammaticalAnalyzer(myLexicalAnalyzer.getWords());
         // System.out.println(codeBuffer);
 
+        ArrayList<Pair<Integer, SysYException.ExceptionCode>> errors =
+                new ArrayList<Pair<Integer, SysYException.ExceptionCode>>() {{
+                    addAll(Node.errors);
+                }};
+
+        errors.sort(Comparator.comparing(o -> o.getKey()));
+        for (Pair<Integer, SysYException.ExceptionCode> error : errors) {
+            System.err.println(error.getKey() + " " + error.getValue());
+        }
+        
     }
+
+
 
 }
 

@@ -1,8 +1,8 @@
 package grammaticalAnalysis.grammatical;
 
-public class StmtNode extends Node {
+public class ExprNode extends Node {
 
-    public StmtNode(int line) {
+    public ExprNode(int line) {
         super(line);
     }
 

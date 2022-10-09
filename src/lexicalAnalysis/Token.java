@@ -1,6 +1,6 @@
 package lexicalAnalysis;
 
-import enums.CategoryCodeEnum.CategoryCode;
+import myclasses.CategoryCodeEnum.CategoryCode;
 import lexicalAnalysis.lexical.FormatString;
 import lexicalAnalysis.lexical.Ident;
 import lexicalAnalysis.lexical.IntConst;

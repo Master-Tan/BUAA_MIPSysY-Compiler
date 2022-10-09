@@ -1,4 +1,4 @@
-package enums;
+package myclasses;
 
 public class CategoryCodeEnum {
 

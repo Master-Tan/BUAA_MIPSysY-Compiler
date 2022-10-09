@@ -1,6 +1,6 @@
 package lexicalAnalysis.lexical;
 
-import enums.CategoryCodeEnum;
+import myclasses.CategoryCodeEnum;
 
 public class Ident extends Word {
 
