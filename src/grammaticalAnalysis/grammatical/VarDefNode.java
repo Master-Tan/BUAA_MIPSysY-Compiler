@@ -44,4 +44,15 @@ public class VarDefNode extends Node {
             return false;
         }
     }
+
+    public DataType getDataType() {
+
+        if (constExpNodes.size() == 0) {
+            return DataType.INT;
+        } else if (constExpNodes.size() == 1) {
+            return DataType.ARRAY1;
+        } else {
+            return DataType.ARRAY2;
+        }
+    }
 }

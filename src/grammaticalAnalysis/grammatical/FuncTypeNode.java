@@ -11,4 +11,7 @@ public class FuncTypeNode extends Node {
         this.reserved = reserved;
     }
 
+    public Word getReserved() {
+        return reserved;
+    }
 }

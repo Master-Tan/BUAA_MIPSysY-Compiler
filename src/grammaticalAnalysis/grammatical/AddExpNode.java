@@ -1,5 +1,6 @@
 package grammaticalAnalysis.grammatical;
 
+import grammaticalAnalysis.SymbolTable;
 import lexicalAnalysis.lexical.Word;
 
 public class AddExpNode extends Node {
@@ -22,4 +23,7 @@ public class AddExpNode extends Node {
         this.mulExpNode = mulExpNode;
     }
 
+    public DataType getDataType(SymbolTable currentSymbolTable) {
+        return mulExpNode.getDataType(currentSymbolTable);
+    }
 }

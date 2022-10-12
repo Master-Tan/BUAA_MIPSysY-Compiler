@@ -3,6 +3,7 @@ package grammaticalAnalysis.grammatical;
 import exceptions.SysYException;
 import grammaticalAnalysis.SymbolTable;
 import lexicalAnalysis.lexical.Word;
+import myclasses.CategoryCodeEnum;
 import myclasses.Pair;
 
 public class UnaryExpNode extends Node {
@@ -83,10 +84,25 @@ public class UnaryExpNode extends Node {
             return false;
         } else {
             if (currentSymbolTable.isParaTypeUnmatch(ident, funcRParamsNode)) {
-                errors.add(new Pair<>(ident.getLineNumber(), SysYException.ExceptionCode.d));
+                errors.add(new Pair<>(ident.getLineNumber(), SysYException.ExceptionCode.e));
                 return true;
             } else {
                 return false;
+            }
+        }
+    }
+
+    public DataType getDataType(SymbolTable currentSymbolTable) {
+        if (primaryExpNode != null) {
+            return primaryExpNode.getDataType(currentSymbolTable);
+        } else if (unaryExpNode != null) {
+            return (unaryExpNode.getDataType(currentSymbolTable));
+        } else {
+            Word reserved = currentSymbolTable.getFunReturnType(ident);
+            if (reserved.getCategoryCode() == CategoryCodeEnum.CategoryCode.VOIDTK) {
+                return DataType.VOID;
+            } else {
+                return DataType.INT;
             }
         }
     }

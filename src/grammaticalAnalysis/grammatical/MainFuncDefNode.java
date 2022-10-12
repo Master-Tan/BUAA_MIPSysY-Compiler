@@ -35,4 +35,13 @@ public class MainFuncDefNode extends FuncDefNode {
         }
     }
 
+    @Override
+    public boolean checkErrorG(SymbolTable currentSymbolTable) {
+        if (blockNode.getReturnType(currentSymbolTable) == null) {
+            errors.add(new Pair<>(blockNode.getEndLine(), SysYException.ExceptionCode.g));
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

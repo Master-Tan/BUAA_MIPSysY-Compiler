@@ -17,4 +17,7 @@ public class StmtReturnNode extends StmtNode {
         this.expNode = null;
     }
 
+    public ExpNode getExpNode() {
+        return expNode;
+    }
 }

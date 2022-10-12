@@ -17,4 +17,7 @@ public class BlockItemNode extends Node {
         this.declNode = declNode;
     }
 
+    public StmtNode getStmtNode() {
+        return stmtNode;
+    }
 }

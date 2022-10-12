@@ -18,6 +18,33 @@ public class LValNode extends Node {
         this.expNodes = expNodes;
     }
 
+    public Word getIdent() {
+        return ident;
+    }
+
+    public DataType getDataType(SymbolTable currentSymbolTable) {
+        if (currentSymbolTable.getVarType(ident) == null) {
+            return null;
+        }
+        if (currentSymbolTable.getVarType(ident) == DataType.INT) {
+            return DataType.INT;
+        } else if (currentSymbolTable.getVarType(ident) == DataType.ARRAY1) {
+            if (expNodes.size() == 0) {
+                return DataType.ARRAY1;
+            } else {
+                return DataType.INT;
+            }
+        } else {
+            if (expNodes.size() == 0) {
+                return DataType.ARRAY2;
+            } else if (expNodes.size() == 1) {
+                return DataType.ARRAY1;
+            } else {
+                return DataType.INT;
+            }
+        }
+    }
+
     @Override
     public boolean checkErrorC(SymbolTable currentSymbolTable) {
         if (currentSymbolTable.isUndefine(ident)) {

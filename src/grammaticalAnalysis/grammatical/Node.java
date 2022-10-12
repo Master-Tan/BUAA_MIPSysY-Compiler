@@ -12,6 +12,10 @@ public class Node {
 
     public static final ArrayList<Pair<Integer, SysYException.ExceptionCode>> errors = new ArrayList<>();
 
+    public enum DataType {
+        VOID, INT, ARRAY1, ARRAY2
+    }
+
     public Node(int line) {
         this.line = line;
     }
@@ -44,7 +48,23 @@ public class Node {
         return false;
     }
 
+    public boolean checkErrorF(SymbolTable symbolTable) {
+        return false;
+    }
+
+    public boolean checkErrorG(SymbolTable symbolTable) {
+        return false;
+    }
+
+    public boolean checkErrorH(SymbolTable symbolTable) {
+        return false;
+    }
+
     public boolean checkErrorL() {
+        return false;
+    }
+
+    public boolean checkErrorM(SymbolTable symbolTable) {
         return false;
     }
 }

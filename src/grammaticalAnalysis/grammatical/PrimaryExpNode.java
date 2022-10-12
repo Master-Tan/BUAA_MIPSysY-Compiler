@@ -1,8 +1,6 @@
 package grammaticalAnalysis.grammatical;
 
-import lexicalAnalysis.lexical.Word;
-
-import java.util.ArrayList;
+import grammaticalAnalysis.SymbolTable;
 
 public class PrimaryExpNode extends Node {
 
@@ -31,4 +29,13 @@ public class PrimaryExpNode extends Node {
         this.numberNode = numberNode;
     }
 
+    public DataType getDataType(SymbolTable currentSymbolTable) {
+        if (expNode != null) {
+            return expNode.getDataType(currentSymbolTable);
+        } else if (lValNode != null) {
+            return lValNode.getDataType(currentSymbolTable);
+        } else {
+            return DataType.INT;
+        }
+    }
 }

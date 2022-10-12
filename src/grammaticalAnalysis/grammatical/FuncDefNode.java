@@ -40,6 +40,10 @@ public class FuncDefNode extends Node {
         return funcFParamsNode;
     }
 
+    public FuncTypeNode getFuncTypeNode() {
+        return funcTypeNode;
+    }
+
     @Override
     public String toString() {
         return "FuncDefNode";
@@ -48,6 +52,26 @@ public class FuncDefNode extends Node {
     public boolean checkErrorB(SymbolTable currentSymbolTable) {
         if (currentSymbolTable.isRedefine(ident)) {
             errors.add(new Pair<>(ident.getLineNumber(), SysYException.ExceptionCode.b));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean checkErrorF(SymbolTable currentSymbolTable) {
+        if (funcTypeNode.getReserved().isVoid() && blockNode.getReturnType(currentSymbolTable) != null) {
+            errors.add(new Pair<>(blockNode.getReturnLine(currentSymbolTable), SysYException.ExceptionCode.f));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean checkErrorG(SymbolTable currentSymbolTable) {
+        if (!funcTypeNode.getReserved().isVoid() && blockNode.getReturnType(currentSymbolTable) == null) {
+            errors.add(new Pair<>(blockNode.getEndLine(), SysYException.ExceptionCode.g));
             return true;
         } else {
             return false;

@@ -37,4 +37,14 @@ public class ConstDefNode extends Node {
             return false;
         }
     }
+
+    public DataType getDataType() {
+        if (constExpNodes == null) {
+            return DataType.INT;
+        } else if (constExpNodes.size() == 0) {
+            return DataType.ARRAY1;
+        } else {
+            return DataType.ARRAY2;
+        }
+    }
 }

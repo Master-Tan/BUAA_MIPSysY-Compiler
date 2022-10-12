@@ -1,6 +1,8 @@
 package grammaticalAnalysis.grammatical;
 
+import grammaticalAnalysis.SymbolTable;
 import lexicalAnalysis.lexical.Word;
+import myclasses.CategoryCodeEnum;
 
 public class MulExpNode extends Node {
 
@@ -22,4 +24,7 @@ public class MulExpNode extends Node {
         this.unaryExpNode = unaryExpNode;
     }
 
+    public DataType getDataType(SymbolTable currentSymbolTable) {
+        return unaryExpNode.getDataType(currentSymbolTable);
+    }
 }
