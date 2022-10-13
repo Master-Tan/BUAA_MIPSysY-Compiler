@@ -12,6 +12,24 @@ public class FuncDefNode extends Node {
     private FuncFParamsNode funcFParamsNode;
     private BlockNode blockNode;
 
+
+
+    public FuncDefNode(FuncTypeNode funcTypeNode, Word ident, int line) {
+        super(line);
+        this.funcTypeNode = funcTypeNode;
+        this.ident = ident;
+        this.funcFParamsNode = null;
+        this.blockNode = null;
+    }
+
+    public FuncDefNode(FuncTypeNode funcTypeNode, Word ident, FuncFParamsNode funcFParamsNode, int line) {
+        super(line);
+        this.funcTypeNode = funcTypeNode;
+        this.ident = ident;
+        this.funcFParamsNode = funcFParamsNode;
+        this.blockNode = null;
+    }
+
     public FuncDefNode(FuncTypeNode funcTypeNode, Word ident, FuncFParamsNode funcFParamsNode, BlockNode blockNode, int line) {
         super(line);
         this.funcTypeNode = funcTypeNode;
@@ -52,16 +70,6 @@ public class FuncDefNode extends Node {
     public boolean checkErrorB(SymbolTable currentSymbolTable) {
         if (currentSymbolTable.isRedefine(ident)) {
             errors.add(new Pair<>(ident.getLineNumber(), SysYException.ExceptionCode.b));
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean checkErrorF(SymbolTable currentSymbolTable) {
-        if (funcTypeNode.getReserved().isVoid() && blockNode.getReturnType(currentSymbolTable) != null) {
-            errors.add(new Pair<>(blockNode.getReturnLine(currentSymbolTable), SysYException.ExceptionCode.f));
             return true;
         } else {
             return false;

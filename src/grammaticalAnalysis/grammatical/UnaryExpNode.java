@@ -66,7 +66,7 @@ public class UnaryExpNode extends Node {
 
     @Override
     public boolean checkErrorD(SymbolTable currentSymbolTable) {
-        if (this.funcRParamsNode == null) {
+        if (this.ident == null) {
             return false;
         } else {
             if (currentSymbolTable.isParaNumberUnmatch(ident, funcRParamsNode)) {

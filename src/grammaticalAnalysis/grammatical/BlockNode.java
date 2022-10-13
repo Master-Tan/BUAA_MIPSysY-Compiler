@@ -39,17 +39,4 @@ public class BlockNode extends Node {
         return endLine;
     }
 
-    public Integer getReturnLine(SymbolTable currentSymbolTable) {
-        if (blockItemNodes.size() == 0) {
-            return null;
-        }
-        int i = blockItemNodes.size() - 1;
-        if (blockItemNodes.get(i).getStmtNode() != null) {
-            if (blockItemNodes.get(i).getStmtNode() instanceof StmtReturnNode) {
-                return ((StmtReturnNode) blockItemNodes.get(i).getStmtNode()).getLine();
-            }
-        }
-        return null;
-    }
-
 }

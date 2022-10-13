@@ -38,7 +38,7 @@ public class VarDefNode extends Node {
 
     public boolean checkErrorB(SymbolTable currentSymbolTable) {
         if (currentSymbolTable.isRedefine(ident)) {
-            errors.add(new Pair<>(this.getLine(), SysYException.ExceptionCode.b));
+            errors.add(new Pair<>(ident.getLineNumber(), SysYException.ExceptionCode.b));
             return true;
         } else {
             return false;

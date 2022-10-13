@@ -17,6 +17,12 @@ public class MainFuncDefNode extends FuncDefNode {
         this.blockNode = blockNode;
     }
 
+    public MainFuncDefNode(Word ident, int line) {
+        super(line);
+        this.ident = ident;
+        this.blockNode = null;
+    }
+
     public Word getIdent() {
         return ident;
     }

@@ -16,6 +16,8 @@ public class SymbolTable {
 
     private int loop;
 
+    private boolean isInVoidFun;
+
     public SymbolTable() {
         varMapList = new ArrayList<HashMap<String, Node>>() {{
             add(new HashMap<>());
@@ -23,6 +25,7 @@ public class SymbolTable {
         funMap = new HashMap<>();
         index = 0;
         loop = 0;
+        isInVoidFun = false;
     }
 
     public SymbolTable(ArrayList<HashMap<String, Node>> varMapList, HashMap<String, FuncDefNode> funMap, int index, int loop) {
@@ -39,11 +42,6 @@ public class SymbolTable {
     public void addVar(Word ident, Node node) {
         if (!node.checkErrorB(this)) {
             varMapList.get(index).put(ident.getWordValue(), node);
-            if (node instanceof MainFuncDefNode) {
-                this.addFun(((MainFuncDefNode) node).getIdent(), (MainFuncDefNode) node);
-            } else if (node instanceof FuncDefNode) {
-                this.addFun(((FuncDefNode) node).getIdent(), (FuncDefNode) node);
-            }
             System.out.println(this);
         }
     }
@@ -75,11 +73,13 @@ public class SymbolTable {
 
     public boolean isParaNumberUnmatch(Word ident, FuncRParamsNode funcRParamsNode) {
         if (funMap.get(ident.getWordValue()).getFuncFParamsNode() == null) {
-            if (funcRParamsNode.getExpNodes().size() == 0) {
+            if (funcRParamsNode == null) {
                 return false;
             } else {
                 return true;
             }
+        } else if (funcRParamsNode == null) {
+            return true;
         } else if (funMap.get(ident.getWordValue()).getFuncFParamsNode().getFuncFParamNodes().size() !=
                 funcRParamsNode.getExpNodes().size()) {
             return true;
@@ -150,6 +150,14 @@ public class SymbolTable {
 
     public void setLoop(int loop) {
         this.loop = loop;
+    }
+
+    public boolean isInVoidFun() {
+        return isInVoidFun;
+    }
+
+    public void setInVoidFun(boolean inVoidFun) {
+        isInVoidFun = inVoidFun;
     }
 
     public void toChild() {

@@ -2,12 +2,6 @@ package grammaticalAnalysis;
 
 import exceptions.SysYException;
 import grammaticalAnalysis.grammatical.*;
-import grammaticalAnalysis.grammatical.AddExpNode;
-import grammaticalAnalysis.grammatical.ExpNode;
-import grammaticalAnalysis.grammatical.LValNode;
-import grammaticalAnalysis.grammatical.MulExpNode;
-import grammaticalAnalysis.grammatical.PrimaryExpNode;
-import grammaticalAnalysis.grammatical.UnaryExpNode;
 import grammaticalAnalysis.grammatical.Stmt.*;
 import lexicalAnalysis.LexicalAnalyzer;
 import lexicalAnalysis.lexical.Word;
@@ -67,8 +61,17 @@ public class GrammaticalAnalyzer {
 
         FuncTypeNode funcTypeNode = funcType();
 
+        if (funcTypeNode.getReserved().isVoid()) {
+            currentSymbolTable.setInVoidFun(true);
+        }
+
         Word ident = words.get(index);
         printWord(ident);
+
+        funcDefNode = new FuncDefNode(funcTypeNode, ident, line);
+        if (!funcDefNode.checkErrorB(currentSymbolTable)) {
+            currentSymbolTable.addVar(ident, funcDefNode);
+        }
 
         Word separator = words.get(index);
         printWord(separator);
@@ -78,6 +81,9 @@ public class GrammaticalAnalyzer {
         if (words.get(index).isRParent()) {
             printWord(words.get(index));
 
+            funcDefNode = new FuncDefNode(funcTypeNode, ident, line);
+            currentSymbolTable.addFun(ident, funcDefNode);
+
             BlockNode blockNode = block();
 
             funcDefNode = new FuncDefNode(funcTypeNode, ident, blockNode, line);
@@ -85,13 +91,23 @@ public class GrammaticalAnalyzer {
             if (isFuncFParams()) {
                 FuncFParamsNode funcFParamsNode = funcFParams();
 
-                printWord(words.get(index));
+                if (words.get(index).isRParent()) {
+                    printWord(words.get(index));
+                } else {
+                    Node.errors.add(new Pair<>(separator.getLineNumber(), SysYException.ExceptionCode.j));
+                }
+
+                funcDefNode = new FuncDefNode(funcTypeNode, ident, funcFParamsNode, line);
+                currentSymbolTable.addFun(ident, funcDefNode);
 
                 BlockNode blockNode = block();
 
                 funcDefNode = new FuncDefNode(funcTypeNode, ident, funcFParamsNode, blockNode, line);
             } else {
                 Node.errors.add(new Pair<>(separator.getLineNumber(), SysYException.ExceptionCode.j));
+
+                funcDefNode = new FuncDefNode(funcTypeNode, ident, line);
+                currentSymbolTable.addFun(ident, funcDefNode);
 
                 BlockNode blockNode = block();
 
@@ -101,12 +117,9 @@ public class GrammaticalAnalyzer {
 
         printGrammaticalData("FuncDef");
 
-        if (!funcDefNode.checkErrorB(currentSymbolTable)) {
-            currentSymbolTable.addVar(funcDefNode.getIdent(), funcDefNode);
-        }
-
-        funcDefNode.checkErrorF(currentSymbolTable);
         funcDefNode.checkErrorG(currentSymbolTable);
+
+        currentSymbolTable.setInVoidFun(false);
 
         return funcDefNode;
     }
@@ -204,6 +217,8 @@ public class GrammaticalAnalyzer {
 
     private ConstDeclNode constDecl() {
 
+        int constDeclLine = line;
+
         printWord(words.get(index));
         printWord(words.get(index));
 
@@ -221,7 +236,7 @@ public class GrammaticalAnalyzer {
         if (words.get(index).isSemicn()) {
             printWord(words.get(index));
         } else {
-            Node.errors.add(new Pair<>(constDefNodes.get(constDefNodes.size() - 1).getLine(), SysYException.ExceptionCode.i));
+            Node.errors.add(new Pair<>(constDeclLine, SysYException.ExceptionCode.i));
         }
 
         ConstDeclNode constDeclNode = new ConstDeclNode(constDefNodes, line);
@@ -232,6 +247,8 @@ public class GrammaticalAnalyzer {
     }
 
     private ConstDefNode constDef() {
+
+        int declLine = line;
 
         Word ident = words.get(index);
         printWord(ident);
@@ -246,7 +263,7 @@ public class GrammaticalAnalyzer {
             if (words.get(index).isRbrack()) {
                 printWord(words.get(index));
             } else {
-                Node.errors.add(new Pair<>(ident.getLineNumber(), SysYException.ExceptionCode.k));
+                Node.errors.add(new Pair<>(declLine, SysYException.ExceptionCode.k));
             }
         }
 
@@ -378,7 +395,11 @@ public class GrammaticalAnalyzer {
             if (isFuncRParams()) {
                 FuncRParamsNode funcRParamsNode = funcRParams();
 
-                printWord(words.get(index));
+                if (words.get(index).isRParent()) {
+                    printWord(words.get(index));
+                } else {
+                    Node.errors.add(new Pair<>(ident.getLineNumber(), SysYException.ExceptionCode.j));
+                }
 
                 unaryExpNode = new UnaryExpNode(ident, funcRParamsNode, line);
             } else {
@@ -447,10 +468,16 @@ public class GrammaticalAnalyzer {
         if (words.get(index).isLparent()) {
             printWord(words.get(index));
 
+            int expLine = line;
+
             ExpNode expNode = exp();
             primaryExpNode = new PrimaryExpNode(expNode, line);
 
-            printWord(words.get(index));
+            if (words.get(index).isRParent()) {
+                printWord(words.get(index));
+            } else {
+                Node.errors.add(new Pair<>(expLine, SysYException.ExceptionCode.j));
+            }
 
         } else if (words.get(index).isIdent()) {
 
@@ -499,7 +526,7 @@ public class GrammaticalAnalyzer {
             }
         }
 
-        LValNode lValNode = new LValNode(ident, expNodes, line);
+        LValNode lValNode = new LValNode(ident, expNodes, ident.getLineNumber());
 
         printGrammaticalData("LVal");
 
@@ -629,10 +656,18 @@ public class GrammaticalAnalyzer {
     private MainFuncDefNode mainFuncDef() {
         currentSymbolTable.toChild();
 
+        MainFuncDefNode mainFuncDefNode = null;
+
         printWord(words.get(index));
 
         Word ident = words.get(index);
         printWord(ident);
+
+        mainFuncDefNode = new MainFuncDefNode(ident, line);
+        if (!mainFuncDefNode.checkErrorB(currentSymbolTable)) {
+            currentSymbolTable.addVar(ident, mainFuncDefNode);
+            currentSymbolTable.addFun(ident, mainFuncDefNode);
+        }
 
         Word separator = words.get(index);
         printWord(separator);
@@ -644,13 +679,9 @@ public class GrammaticalAnalyzer {
         }
 
         BlockNode blockNode = block();
-        MainFuncDefNode mainFuncDefNode = new MainFuncDefNode(ident, blockNode, line);
+        mainFuncDefNode = new MainFuncDefNode(ident, blockNode, line);
 
         printGrammaticalData("MainFuncDef");
-
-        if (!mainFuncDefNode.checkErrorB(currentSymbolTable)) {
-            currentSymbolTable.addVar(mainFuncDefNode.getIdent(), mainFuncDefNode);
-        }
 
         mainFuncDefNode.checkErrorG(currentSymbolTable);
 
@@ -833,80 +864,87 @@ public class GrammaticalAnalyzer {
             stmtNode = new StmtBlockNode(blockNode, line);
 
         } else {
-            int opt = index;
-            boolean flag = false;
-            if (words.get(opt).isIdent() &&
-                !words.get(opt + 1).isLparent()) {
-                while (words.get(opt + 1).isLbrack()) {
-                    opt++;
-                    while (!words.get(opt).isRbrack()) {
-                        opt++;
-                    }
-                }
-                if (words.get(opt + 1).isAssign()) {
-                    flag = true;
-                }
-            }
-            if (flag) {
-                LValNode lValNode = lVal();
+
+            if (words.get(index).isSemicn()) {
 
                 printWord(words.get(index));
 
-                if (words.get(index).isGetint()) {
-                    int getintLine = line;
-                    printWord(words.get(index));
-                    printWord(words.get(index));
-
-                    if (words.get(index).isRParent()) {
-                        printWord(words.get(index));
-                    } else {
-                        Node.errors.add(new Pair<>(getintLine, SysYException.ExceptionCode.j));
-                    }
-
-                    if (words.get(index).isSemicn()) {
-                        printWord(words.get(index));
-                    } else {
-                        Node.errors.add(new Pair<>(getintLine, SysYException.ExceptionCode.i));
-                    }
-
-                    stmtNode = new StmtGetIntNode(lValNode, line);
-                } else {
-                    int expLine = line;
-                    ExpNode expNode = exp();
-
-                    if (words.get(index).isSemicn()) {
-                        printWord(words.get(index));
-                    } else {
-                        Node.errors.add(new Pair<>(expLine, SysYException.ExceptionCode.i));
-                    }
-
-                    stmtNode = new StmtAssignNode(lValNode, expNode, line);
-                }
+                stmtNode = new StmtExprNode(line);
             } else {
-                if (words.get(index).isSemicn()) {
+                int nowLine = line;
+                if (isExp()) {
 
-                    printWord(words.get(index));
-
-                    stmtNode = new StmtExprNode(line);
-                } else {
-                    int nowLine = line;
-                    if (isExp()) {
-                        int expLine = line;
-
-                        ExpNode expNode = exp();
-
-                        if (words.get(index).isSemicn()) {
-                            printWord(words.get(index));
-                        } else {
-                            Node.errors.add(new Pair<>(expLine, SysYException.ExceptionCode.i));
-                        }
-
-                        stmtNode = new StmtExprNode(expNode, line);
-                    } else {
-                        Node.errors.add(new Pair<>(nowLine, SysYException.ExceptionCode.i));
+                    boolean flag = false;
+                    int opt = index;
+                    ArrayList<Pair<Integer, SysYException.ExceptionCode>> nowErrors = new ArrayList<>(Node.errors);
+                    ExpNode expNode = exp();
+                    Node.errors.clear();
+                    Node.errors.addAll(nowErrors);
+                    if (words.get(index).isAssign()) {
+                        flag = true;
                     }
+                    index = opt;
+
+                    if (flag) {
+                        LValNode lValNode = lVal();
+
+                        printWord(words.get(index));
+
+                        if (words.get(index).isGetint()) {
+                            int getintLine = line;
+                            printWord(words.get(index));
+                            printWord(words.get(index));
+
+                            if (words.get(index).isRParent()) {
+                                printWord(words.get(index));
+                            } else {
+                                Node.errors.add(new Pair<>(getintLine, SysYException.ExceptionCode.j));
+                            }
+
+                            if (words.get(index).isSemicn()) {
+                                printWord(words.get(index));
+                            } else {
+                                Node.errors.add(new Pair<>(getintLine, SysYException.ExceptionCode.i));
+                            }
+
+                            stmtNode = new StmtGetIntNode(lValNode, line);
+                        } else {
+                            int expLine = line;
+                            expNode = exp();
+
+                            if (words.get(index).isSemicn()) {
+                                printWord(words.get(index));
+                            } else {
+                                Node.errors.add(new Pair<>(expLine, SysYException.ExceptionCode.i));
+                            }
+
+                            stmtNode = new StmtAssignNode(lValNode, expNode, line);
+                        }
+                    } else {
+                        if (words.get(index).isSemicn()) {
+
+                            printWord(words.get(index));
+
+                            stmtNode = new StmtExprNode(line);
+                        } else {
+                            int expLine = line;
+
+                            expNode = exp();
+
+                            if (words.get(index).isSemicn()) {
+                                printWord(words.get(index));
+                            } else {
+                                Node.errors.add(new Pair<>(expLine, SysYException.ExceptionCode.i));
+                            }
+
+                            stmtNode = new StmtExprNode(expNode, line);
+                        }
+                    }
+                } else {
+                    Node.errors.add(new Pair<>(nowLine, SysYException.ExceptionCode.i));
                 }
             }
+
         }
 
         printGrammaticalData("Stmt");
@@ -921,6 +959,10 @@ public class GrammaticalAnalyzer {
             ((StmtBreakNode) stmtNode).checkErrorM(currentSymbolTable);
         } else if (stmtNode instanceof StmtContinueNode) {
             ((StmtContinueNode) stmtNode).checkErrorM(currentSymbolTable);
+        }
+
+        if (stmtNode instanceof StmtReturnNode) {
+            ((StmtReturnNode) stmtNode).checkErrorF(currentSymbolTable);
         }
 
         if (stmtNode instanceof StmtLoopNode && currentSymbolTable.getLoop() > 0) {
