@@ -39,6 +39,14 @@ public class Module extends Value {
         return null;
     }
 
+    public ArrayList<Function> getFunctions() {
+        return functions;
+    }
+
+    public ArrayList<GlobalVariable> getGlobalVariables() {
+        return globalVariables;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

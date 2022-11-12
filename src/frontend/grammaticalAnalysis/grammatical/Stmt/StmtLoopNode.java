@@ -14,4 +14,11 @@ public class StmtLoopNode extends StmtNode {
         this.stmtNode = node;
     }
 
+    public CondNode getCondNode() {
+        return condNode;
+    }
+
+    public StmtNode getStmtNode() {
+        return stmtNode;
+    }
 }

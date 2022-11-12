@@ -8,6 +8,10 @@ public class IntegerType extends Type {
         this.bits = bits;
     }
 
+    public int getBits() {
+        return bits;
+    }
+
     @Override
     public String toString() {
         return "i" + bits;

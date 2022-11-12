@@ -12,6 +12,7 @@ public class ConstantInt extends Constant {
 
     public ConstantInt(int bits, int val) {
         super(Integer.toString(val), new IntegerType(bits), null);
+        this.val = val;
     }
 
     public int getVal() {

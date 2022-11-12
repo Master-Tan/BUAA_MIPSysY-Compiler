@@ -1,9 +1,12 @@
 package midend.ir.values.constant;
 
+import midend.ir.types.ArrayType;
 import midend.ir.types.IntegerType;
 import midend.ir.types.Type;
 import midend.ir.values.User;
 import midend.ir.values.Value;
+
+import java.util.ArrayList;
 
 public class Constant extends User {
 
@@ -16,10 +19,8 @@ public class Constant extends User {
     public static Value getZeroConstant(Type type) {
         if (type instanceof IntegerType) {
             return new ConstantInt(32, 0);
-        } else {
-            // 数组类型
-            // TODO
-            return null;
+        } else {  // ArrayType
+            return new ConstantArray((ArrayType) type);
         }
     }
 }

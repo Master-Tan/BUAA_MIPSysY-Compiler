@@ -18,7 +18,7 @@ public class Call extends TerminatorInstruction {
         super("", new VoidType(), parent, new ArrayList<Value>() {{
             add(function);
             addAll(args);
-        }}.toArray(new Value[0]));
+        }}.toArray(new Value[args.size() + 1]));
         isVoid = true;
     }
 

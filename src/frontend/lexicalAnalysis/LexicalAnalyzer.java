@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class LexicalAnalyzer {
 
-    public static final boolean printLexicalAnalyzerData = false;  // 是否输出词法分析结果
+    public static final boolean printLexicalAnalyzerData = true;  // 是否输出词法分析结果
 
     private StringBuffer codeBuffer;  // 原本的代码
 

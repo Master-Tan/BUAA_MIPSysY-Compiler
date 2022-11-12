@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class GrammaticalAnalyzer {
 
-    public static final boolean printGrammaticalAnalyzerData = false;  // 是否输出语法分析结果
+    public static final boolean printGrammaticalAnalyzerData = true;  // 是否输出语法分析结果
 
     private ArrayList<Word> words;
     private int index;

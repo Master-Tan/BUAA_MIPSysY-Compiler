@@ -23,6 +23,10 @@ public class Ret extends TerminatorInstruction {
         isVoid = false;
     }
 
+    public boolean isVoid() {
+        return isVoid;
+    }
+
     @Override
     public String toString() {
         if (isVoid) {

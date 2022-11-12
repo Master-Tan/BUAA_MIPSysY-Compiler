@@ -9,6 +9,6 @@ public class Phi extends MemoryInstruction {
     public Phi(String name, Type type, BasicBlock parent, Value... ops) {
         super(name, type, parent, ops);
     }
-    // TODO 分支或循环时用
+    // TODO 分支或循环优化时用
 
 }

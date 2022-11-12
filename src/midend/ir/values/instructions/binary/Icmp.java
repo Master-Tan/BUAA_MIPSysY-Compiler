@@ -16,7 +16,7 @@ public class Icmp extends BinaryOperatorInstruction {
     @Override
     public String toString() {
         return this.getName() + " = icmp " + this.icmpType.toString() + " " +
-                this.getType() + " " +
+                this.getUsedValue(0).getType() + " " +
                 this.getUsedValue(0).getName() + ", "  + this.getUsedValue(1).getName();
     }
 

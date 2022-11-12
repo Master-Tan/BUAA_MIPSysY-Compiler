@@ -9,8 +9,13 @@ import midend.ir.values.*;
 import midend.ir.values.constant.*;
 import midend.ir.values.instructions.binary.IcmpType;
 import midend.ir.values.instructions.memory.Alloca;
+import midend.ir.values.instructions.memory.Getelementptr;
+import midend.ir.values.instructions.memory.Load;
+import midend.ir.values.instructions.terminator.Br;
+import midend.ir.values.instructions.terminator.Ret;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class Visitor {
@@ -23,19 +28,27 @@ public class Visitor {
     private Type currentType;
     private ArrayList<Value> currentArray;
     private ArrayList<Type> currentTypeArray;
+    private BasicBlock currentIfBasicBlock;
+    private BasicBlock currentElseBasicBlock;
+    private BasicBlock currentNextBasicBlock;
+    private BasicBlock currentBreakBasicBlock;
+    private BasicBlock currentContinueBasicBlock;
+    private ArrayList<Integer> currentDimensions;
+    private int currentArrayIndex;
+
 
     private boolean isConstant = false;
     private boolean isGlobalInit = false;
     private boolean isCallingFunc = false;
+    private boolean isSingleJudge = false;
+    private boolean isArrayInit = false;
 
+    // 存储变量的值
     private ArrayList<HashMap<String, Value>> symbolVal = new ArrayList<HashMap<String, Value>>(){{
         add(new HashMap<>());
     }};
     private int symbolValIndex = 0;
-    private ArrayList<HashMap<String, Integer>> regRank = new ArrayList<HashMap<String, Integer>>(){{
-        add(new HashMap<>());
-    }};
-    private boolean inEnterSymbolVal = false;
+    private boolean isEnterSymbolVal = false;
 
     public Visitor() {
     }
@@ -90,12 +103,114 @@ public class Visitor {
         ArrayList<ConstExpNode> constExpNodes = constDefNode.getConstExpNodes();
         ConstInitValNode constInitValNode = constDefNode.getConstInitvalNode();
 
-        String defName = ident.getWordValue();
+        String varName = ident.getWordValue();
         if (constExpNodes.isEmpty()) {
             visitConstInitVal(constInitValNode);
-            symbolVal.get(symbolValIndex).put(defName, currentValue);
-        } else {
-            // TODO
+            symbolVal.get(symbolValIndex).put(varName, currentValue);
+        } else {  // array
+            ArrayList<Integer> dimensions = new ArrayList<>();
+
+            for (ConstExpNode constExpNode : constExpNodes) {
+                isConstant = true;
+                visitConstExp(constExpNode);
+                isConstant = false;
+                dimensions.add(((ConstantInt) currentValue).getVal());
+            }
+
+            Type arrayType = new IntegerType(32);
+
+            for (int i = dimensions.size() - 1; i >= 0; i--) {
+                arrayType = IRPort.getArrayType(arrayType, dimensions.get(i));
+            }
+
+            if (symbolValIndex == 0) {  // 全局变量
+                currentDimensions = new ArrayList<>(dimensions);
+                isGlobalInit = true;
+                isArrayInit = true;
+                visitConstInitVal(constInitValNode);
+                isArrayInit = false;
+                isGlobalInit = false;
+
+                ArrayList<Constant> constantArray = new ArrayList<>();
+
+                // 全零优化
+                boolean isZero = true;
+                for (Value value : currentArray) {
+                    if (((ConstantInt) value).getVal() != 0) {
+                        isZero = false;
+                    }
+                    constantArray.add((ConstantInt) value);
+                }
+                int arraySize = 1;
+                for (Integer dimension : dimensions) {
+                    arraySize = arraySize * dimension;
+                }
+                GlobalVariable globalVariable;
+                if (isZero) {
+                    globalVariable = IRPort.getZeroGlobalVariable(varName, arrayType);
+                } else {
+                    // 根据所有的常量值和数组维度信息构建数组常量
+                    for (int i = dimensions.size() - 1; i > 0; i--) {
+                        int nowDimension = dimensions.get(i);
+                        ArrayList<Constant> nowConstantArray = new ArrayList<>();
+                        arraySize = arraySize / nowDimension;
+                        for (int j = 0; j < arraySize; j++) {
+                            ArrayList<Constant> array = new ArrayList<>();
+                            for (int k = 0; k < nowDimension; k++) {
+                                array.add(constantArray.get(j * nowDimension + k));
+                            }
+                            nowConstantArray.add(IRPort.getConstantArray(array));
+                        }
+                        constantArray = nowConstantArray;
+                    }
+                    Constant initVal = IRPort.getConstantArray(constantArray);
+                    globalVariable = IRPort.getGlobalVariable(varName, initVal, true);
+                }
+
+                symbolVal.get(symbolValIndex).put(varName, globalVariable);
+                Module.getInstance().addGlobalVariable(globalVariable);
+            } else {  // 局部变量
+                Alloca alloca = IRPort.buildAlloca(arrayType, currentBasicBlock);
+                symbolVal.get(symbolValIndex).put(ident.getWordValue(), alloca);
+
+                currentDimensions = new ArrayList<>(dimensions);
+                isArrayInit = true;
+                visitConstInitVal(constInitValNode);
+                isArrayInit = false;
+
+                ArrayList<Value> constantArray = new ArrayList<>();
+
+                boolean isZero = true;
+                for (Value value : currentArray) {
+                    if (value instanceof ConstantInt) {
+                        if (((ConstantInt) value).getVal() != 0) {
+                            isZero = false;
+                        }
+                    } else {
+                        isZero = false;
+                    }
+                    constantArray.add(value);
+                }
+
+                if (!isZero) {
+                    currentArrayIndex = 0;
+                    constArrayInit(arrayType, alloca, dimensions, constantArray, 1);
+                    currentArrayIndex = 0;
+                }
+            }
+
+        }
+    }
+
+    private void constArrayInit(Type arrayType, Value base, ArrayList<Integer> dimensions, ArrayList<Value> constantArray, int depth) {
+        for (int i = 0; i < dimensions.get(depth - 1); i++) {
+            Getelementptr getelementptr  = IRPort.buildGetelementptr(((ArrayType) arrayType), currentBasicBlock, base,
+                    IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, i));
+            if (depth == dimensions.size()) {
+                IRPort.buildStore(currentBasicBlock, constantArray.get(currentArrayIndex++), getelementptr);
+            } else {
+                constArrayInit(((ArrayType) arrayType).getElementType(), getelementptr, dimensions, constantArray, depth + 1);
+            }
         }
     }
 
@@ -107,13 +222,32 @@ public class Visitor {
         ArrayList<ConstInitValNode> constInitValNodes = constInitValNode.getConstInitValNodes();
 
         if (constExpNode != null) {
-            isConstant = true;
-            visitConstExp(constExpNode);
-            isConstant = false;
-        } else if (constInitValNodes != null) {
-            // TODO
+            if (isGlobalInit || !isArrayInit) {
+                isConstant = true;
+                visitConstExp(constExpNode);
+                isConstant = false;
+            } else {
+                visitConstExp(constExpNode);
+            }
         } else {
-            // TODO
+            ArrayList<Value> array = new ArrayList<>();
+            int arraySize = 1;
+            for (int i = 1; i < currentDimensions.size(); i++) {
+                arraySize  = arraySize * currentDimensions.get(i);
+            }
+            for (ConstInitValNode node : constInitValNodes) {
+                if (node.getConstExpNode() != null) {
+                    visitConstInitVal(node);
+                    array.add(currentValue);
+                } else {
+                    currentDimensions = new ArrayList<Integer>() {{
+                        addAll(Collections.singleton(currentDimensions.remove(0)));
+                    }};
+                    visitConstInitVal(node);
+                    array.addAll(currentArray);
+                }
+            }
+            currentArray = array;
         }
     }
 
@@ -140,7 +274,7 @@ public class Visitor {
         if (constExpNodes.isEmpty()) {
             if (symbolValIndex == 0) {
                 if (initValNode == null) {
-                    GlobalVariable globalVariable = IRPort.getGlobalVariable(varName, IRPort.getIntType(32));
+                    GlobalVariable globalVariable = IRPort.getZeroGlobalVariable(varName, IRPort.getIntType(32));
                     symbolVal.get(symbolValIndex).put(varName, globalVariable);
                     Module.getInstance().addGlobalVariable(globalVariable);
                 } else {
@@ -159,8 +293,101 @@ public class Visitor {
                     IRPort.buildStore(currentBasicBlock, currentValue, alloca);
                 }
             }
-        } else {
-            // TODO
+        } else {  // array
+            ArrayList<Integer> dimensions = new ArrayList<>();
+
+            for (ConstExpNode constExpNode : constExpNodes) {
+                isConstant = true;
+                visitConstExp(constExpNode);
+                isConstant = false;
+                dimensions.add(((ConstantInt) currentValue).getVal());
+            }
+
+            Type arrayType = new IntegerType(32);
+
+            for (int i = dimensions.size() - 1; i >= 0; i--) {
+                arrayType = IRPort.getArrayType(arrayType, dimensions.get(i));
+            }
+
+            if (symbolValIndex == 0) {  // 全局变量
+                if (initValNode == null) {
+                    GlobalVariable globalVariable = IRPort.getZeroGlobalVariable(varName, arrayType);
+                    symbolVal.get(symbolValIndex).put(varName, globalVariable);
+                    Module.getInstance().addGlobalVariable(globalVariable);
+                } else {
+                    currentDimensions = new ArrayList<>(dimensions);
+                    isGlobalInit = true;
+                    visitInitVal(initValNode);
+                    isGlobalInit = false;
+
+                    ArrayList<Constant> constantArray = new ArrayList<>();
+
+                    // 全零优化
+                    boolean isZero = true;
+                    for (Value value : currentArray) {
+                        if (((ConstantInt) value).getVal() != 0) {
+                            isZero = false;
+                        }
+                        constantArray.add((ConstantInt) value);
+                    }
+                    int arraySize = 1;
+                    for (Integer dimension : dimensions) {
+                        arraySize = arraySize * dimension;
+                    }
+                    GlobalVariable globalVariable;
+                    if (isZero) {
+                        globalVariable = IRPort.getZeroGlobalVariable(varName, arrayType);
+                    } else {
+                        // 根据所有的常量值和数组维度信息构建数组常量
+                        for (int i = dimensions.size() - 1; i > 0; i--) {
+                            int nowDimension = dimensions.get(i);
+                            ArrayList<Constant> nowConstantArray = new ArrayList<>();
+                            arraySize = arraySize / nowDimension;
+                            for (int j = 0; j < arraySize; j++) {
+                                ArrayList<Constant> array = new ArrayList<>();
+                                for (int k = 0; k < nowDimension; k++) {
+                                    array.add(constantArray.get(j * nowDimension + k));
+                                }
+                                nowConstantArray.add(IRPort.getConstantArray(array));
+                            }
+                            constantArray = nowConstantArray;
+                        }
+                        Constant initVal = IRPort.getConstantArray(constantArray);
+                        globalVariable = IRPort.getGlobalVariable(varName, initVal, false);
+                    }
+
+                    symbolVal.get(symbolValIndex).put(varName, globalVariable);
+                    Module.getInstance().addGlobalVariable(globalVariable);
+                }
+            } else {  // 局部变量
+                Alloca alloca = IRPort.buildAlloca(arrayType, currentBasicBlock);
+                symbolVal.get(symbolValIndex).put(ident.getWordValue(), alloca);
+
+                if (initValNode != null) {
+                    currentDimensions = new ArrayList<>(dimensions);
+                    visitInitVal(initValNode);
+
+                    ArrayList<Value> valArray = new ArrayList<>();
+
+                    boolean isZero = true;
+                    for (Value value : currentArray) {
+                        if (value instanceof ConstantInt) {
+                            if (((ConstantInt) value).getVal() != 0) {
+                                isZero = false;
+                            }
+                        } else {
+                            isZero = false;
+                        }
+                        valArray.add(value);
+                    }
+
+                    if (!isZero) {
+                        currentArrayIndex = 0;
+                        constArrayInit(arrayType, alloca, dimensions, valArray, 1);
+                        currentArrayIndex = 0;
+                    }
+                }
+            }
         }
     }
 
@@ -182,9 +409,31 @@ public class Visitor {
             }
         } else {
             if (initValNodes != null) {
-                // TODO
-            } else {
-                // TODO
+                ArrayList<Value> array = new ArrayList<>();
+                int arrayLength = currentDimensions.get(0);
+                int arraySize = 1;
+                for (int i = 1; i < currentDimensions.size(); i++) {
+                    arraySize  = arraySize * currentDimensions.get(i);
+                }
+                for (InitValNode node : initValNodes) {
+                    if (node.getExpNode() != null) {
+                        if (isGlobalInit) {
+                            isConstant = true;
+                            visitInitVal(node);
+                            isConstant = false;
+                        } else {
+                            visitInitVal(node);
+                        }
+                        array.add(currentValue);
+                    } else {
+                        currentDimensions = new ArrayList<Integer>() {{
+                            addAll(Collections.singleton(currentDimensions.remove(0)));
+                        }};
+                        visitInitVal(node);
+                        array.addAll(currentArray);
+                    }
+                }
+                currentArray = array;
             }
         }
     }
@@ -219,12 +468,12 @@ public class Visitor {
         currentFunction = function;
 
         // Build basicblock
-        BasicBlock basicBlock = IRPort.buildBasicBlock(funcName, function);
+        BasicBlock basicBlock = IRPort.buildBasicBlock(function);
         currentBasicBlock = basicBlock;
 
         symbolValIndex++;
         symbolVal.add(new HashMap<>());
-        inEnterSymbolVal = true;
+        isEnterSymbolVal = true;
 
         if (funcFParamsNode != null) {
             ArrayList<FuncFParamNode> funcFParamNodes = funcFParamsNode.getFuncFParamNodes();
@@ -235,7 +484,16 @@ public class Visitor {
                     IRPort.buildStore(currentBasicBlock, currentFunction.getArguments().get(funcFParamsCnt), alloca);
                     symbolVal.get(symbolValIndex).put(funcFParamNode.getIdent().getWordValue(), alloca);
                 } else {
-                    // TODO
+                    Type arrayType = IRPort.getIntType(32);
+                    for (int i = funcFParamNode.getConstExpNodes().size() - 1; i >= 0; i--) {
+                        isConstant = true;
+                        visitConstExp(funcFParamNode.getConstExpNodes().get(i));
+                        isConstant = false;
+                        arrayType = IRPort.getArrayType(arrayType, currentInt);
+                    }
+                    Alloca alloca = IRPort.buildAlloca(IRPort.getPointerType(arrayType), currentBasicBlock);
+                    IRPort.buildStore(currentBasicBlock, currentFunction.getArguments().get(funcFParamsCnt), alloca);
+                    symbolVal.get(symbolValIndex).put(funcFParamNode.getIdent().getWordValue(), alloca);
                 }
                 funcFParamsCnt++;
             }
@@ -244,7 +502,13 @@ public class Visitor {
         visitBlock(blockNode);
 
         if (currentFunction.getReturnType() instanceof VoidType) {
-            IRPort.buildRetNoReturn(currentBasicBlock);
+            if (currentBasicBlock.getInstructions().size() == 0) {
+                IRPort.buildRetNoReturn(currentBasicBlock);
+            } else {
+                if (!(currentBasicBlock.getInstructions().get(currentBasicBlock.getInstructions().size() - 1) instanceof Ret)) {
+                    IRPort.buildRetNoReturn(currentBasicBlock);
+                }
+            }
         }
     }
 
@@ -261,12 +525,12 @@ public class Visitor {
         currentFunction = function;
 
         // Build basicblock
-        BasicBlock basicBlock = IRPort.buildBasicBlock(funcName, function);
+        BasicBlock basicBlock = IRPort.buildBasicBlock(function);
         currentBasicBlock = basicBlock;
 
         symbolValIndex++;
         symbolVal.add(new HashMap<>());
-        inEnterSymbolVal = true;
+        isEnterSymbolVal = true;
 
         visitBlock(blockNode);
     }
@@ -294,8 +558,15 @@ public class Visitor {
 
         if (constExpNodes == null) {
             currentType = IRPort.getIntType(32);
-        } else {
-            // TODO
+        } else {  // array
+            Type type = new IntegerType(32);
+            for (int i = constExpNodes.size() - 1; i >= 0; i--) {
+                isConstant = true;
+                visitConstExp(constExpNodes.get(i));
+                isConstant = false;
+                type = IRPort.getArrayType(type, currentInt);
+            }
+            currentType = IRPort.getPointerType(type);
         }
     }
 
@@ -305,8 +576,8 @@ public class Visitor {
     public void visitBlock(BlockNode blockNode) {
         ArrayList<BlockItemNode> blockItemNodes = blockNode.getBlockItemNodes();
 
-        if (inEnterSymbolVal) {
-            inEnterSymbolVal = false;
+        if (isEnterSymbolVal) {
+            isEnterSymbolVal = false;
         } else {
             symbolValIndex++;
             symbolVal.add(new HashMap<>());
@@ -401,28 +672,119 @@ public class Visitor {
         branchStmt → 'if' '(' Cond ')' Stmt [ 'else' Stmt ]
      */
     public void visitBranchStmt(StmtBranchNode stmtBranchNode) {
-        // TODO
+        CondNode condNode = stmtBranchNode.getCondNode();
+        StmtNode stmtIfNode = stmtBranchNode.getStmtNodeIf();
+        StmtNode stmtElseNode = stmtBranchNode.getStmtNodeElse();
+
+        boolean ifHasReturn = false;
+        boolean elseHasReturn = false;
+
+        BasicBlock ifBasicBlock = IRPort.buildBasicBlock(currentFunction);
+        BasicBlock elseBasicBlock = IRPort.buildBasicBlock(currentFunction);
+        BasicBlock nextBasicBlock;
+        if (stmtElseNode != null) {
+            nextBasicBlock = IRPort.buildBasicBlock(currentFunction);
+        } else {
+            nextBasicBlock = elseBasicBlock;
+        }
+
+        currentIfBasicBlock = ifBasicBlock;
+        currentElseBasicBlock = elseBasicBlock;
+
+        visitCond(condNode);
+
+        currentBasicBlock = ifBasicBlock;
+        visitStmt(stmtIfNode);
+        if (!currentBasicBlock.getInstructions().isEmpty()) {
+            if (currentBasicBlock.getInstructions().get(currentBasicBlock.getInstructions().size() - 1) instanceof Ret) {
+                ifHasReturn = true;
+            } else if (currentBasicBlock.getInstructions().get(currentBasicBlock.getInstructions().size() - 1) instanceof Br) {
+                ifHasReturn = true;
+            } else {
+                IRPort.buildBrNoCondition(currentBasicBlock, nextBasicBlock);
+            }
+        } else {
+            IRPort.buildBrNoCondition(currentBasicBlock, nextBasicBlock);
+        }
+
+        if (stmtElseNode != null) {
+            currentBasicBlock = elseBasicBlock;
+            visitStmt(stmtElseNode);
+            if (!currentBasicBlock.getInstructions().isEmpty()) {
+                if (currentBasicBlock.getInstructions().get(currentBasicBlock.getInstructions().size() - 1) instanceof Ret) {
+                    elseHasReturn = true;
+                } else if (currentBasicBlock.getInstructions().get(currentBasicBlock.getInstructions().size() - 1) instanceof Br) {
+                    elseHasReturn = true;
+                } else {
+                    IRPort.buildBrNoCondition(currentBasicBlock, nextBasicBlock);
+                }
+            } else {
+                IRPort.buildBrNoCondition(currentBasicBlock, nextBasicBlock);
+            }
+        }
+
+        if (ifHasReturn && elseHasReturn) {
+            currentFunction.getBasicBlocks().remove(nextBasicBlock);  // 优化：剪枝
+        } else {
+            currentBasicBlock = nextBasicBlock;
+        }
     }
 
     /*
         loopStmt → 'while' '(' Cond ')' Stmt
      */
     public void visitLoopStmt(StmtLoopNode stmtLoopNode) {
-        // TODO
+        CondNode condNode = stmtLoopNode.getCondNode();
+        StmtNode stmtNode = stmtLoopNode.getStmtNode();
+
+        BasicBlock breakBasicBlock = currentBreakBasicBlock;
+        BasicBlock continueBasicBlock = currentContinueBasicBlock;
+
+        BasicBlock condBasicBlock = IRPort.buildBasicBlock(currentFunction);
+        BasicBlock loopBasicBlock = IRPort.buildBasicBlock(currentFunction);
+        BasicBlock nextBasicBlock = IRPort.buildBasicBlock(currentFunction);
+
+        IRPort.buildBrNoCondition(currentBasicBlock, condBasicBlock);
+
+        currentIfBasicBlock = loopBasicBlock;
+        currentElseBasicBlock = nextBasicBlock;
+
+        currentBasicBlock = condBasicBlock;
+        visitCond(condNode);
+
+        currentBreakBasicBlock = nextBasicBlock;
+        currentContinueBasicBlock = condBasicBlock;
+
+        currentBasicBlock = loopBasicBlock;
+        visitStmt(stmtNode);
+        if (currentBasicBlock.getInstructions().isEmpty()) {
+            IRPort.buildBrNoCondition(currentBasicBlock, condBasicBlock);
+        } else {
+            if (!(currentBasicBlock.getInstructions().get(currentBasicBlock.getInstructions().size() - 1) instanceof Br)) {
+                IRPort.buildBrNoCondition(currentBasicBlock, condBasicBlock);
+            }
+        }
+
+        currentBreakBasicBlock = breakBasicBlock;
+        currentContinueBasicBlock = continueBasicBlock;
+
+        currentBasicBlock = nextBasicBlock;
     }
 
     /*
         breakStmt → 'break' ';'
      */
     public void visitBreakStmt(StmtBreakNode stmtBreakNode) {
-        // TODO
+        BasicBlock breakBasicBlock = currentBreakBasicBlock;
+        IRPort.buildBrNoCondition(currentBasicBlock, breakBasicBlock);
     }
 
     /*
         continueStmt → 'continue' ';'
      */
     public void visitContinueStmt(StmtContinueNode stmtContinueNode) {
-        // TODO
+        BasicBlock continueBasicBlock = currentContinueBasicBlock;
+        IRPort.buildBrNoCondition(currentBasicBlock, continueBasicBlock);
     }
 
     /*
@@ -470,6 +832,21 @@ public class Visitor {
         char[] strArray = formatString.getWordValue().substring(1, formatString.getWordValue().length() - 1).toCharArray();
         int expCnt = 0;
 
+        ArrayList<Value> expValues = new ArrayList<>();
+
+        for (int i = 0; i < strArray.length; i++) {
+            if (i != strArray.length - 1) {
+                if (strArray[i] == '%' && strArray[i + 1] == 'd') {
+                    visitExp(expNodes.get(expCnt));
+                    expValues.add(currentValue);
+                    expCnt++;
+                    i++;
+                }
+            }
+        }
+
+        expCnt = 0;
+
         for (int i = 0; i < strArray.length; i++) {
             boolean isPutChar = false;
             boolean isChangeLine = false;
@@ -505,8 +882,7 @@ public class Visitor {
                 Function calledFunction = Module.getInstance().getFunction("@" + funcName);
                 ArrayList<Value> args = new ArrayList<>();
 
-                visitExp(expNodes.get(expCnt));
-                args.add(currentValue);
+                args.add(expValues.get(expCnt));
                 expCnt++;
 
                 currentValue = IRPort.buildCallNoReturn(currentBasicBlock, calledFunction, args);
@@ -531,8 +907,7 @@ public class Visitor {
     public void visitCond(CondNode condNode) {
         LOrExpNode lOrExpNode = condNode.getlOrExpNode();
 
-        // TODO
-        visitLOrExp(lOrExpNode);
+        visitLOrExp(lOrExpNode, true);
     }
 
     /*
@@ -542,18 +917,92 @@ public class Visitor {
         Word ident = lValNode.getIdent();
         ArrayList<ExpNode> expNodes = lValNode.getExpNodes();
 
-        if (expNodes.isEmpty()) {
-            String valueName = ident.getWordValue();
-            Value value = null;
-            for (int i = symbolValIndex; i >= 0; i--) {
-                if (symbolVal.get(i).containsKey(valueName)) {
-                    value = symbolVal.get(i).get(valueName);
-                    break;
+
+        String valueName = ident.getWordValue();
+        Value value = null;
+        for (int i = symbolValIndex; i >= 0; i--) {
+            if (symbolVal.get(i).containsKey(valueName)) {
+                value = symbolVal.get(i).get(valueName);
+                break;
+            }
+        }
+
+        if (value.getType() instanceof IntegerType) {
+            currentValue = value;
+        } else if (value.getType() instanceof PointerType) {
+            Type type = ((PointerType) value.getType()).getPointToType();
+            if (type instanceof IntegerType) {
+                currentValue = value;
+            } else if (type instanceof ArrayType) {  // arrayType
+                ArrayType arrayType = ((ArrayType) type);
+
+                if (expNodes.isEmpty()) {
+                    value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+                } else {
+                    for (int i = 0; i < expNodes.size(); i++) {
+                        visitExp(expNodes.get(i));
+                        value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), currentValue);
+
+                        if (arrayType.getElementType() instanceof ArrayType) {
+                            arrayType = ((ArrayType) arrayType.getElementType());
+
+                            if (i == expNodes.size() - 1) {
+                                value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+                            }
+                        }
+                    }
+                }
+
+                currentValue = value;
+            } else {  // pointType
+                PointerType pointerType = ((PointerType) type);
+                Load load = IRPort.buildLoad(pointerType, currentBasicBlock, value);
+                value = load;
+                ArrayType arrayType = null;
+
+                if (!expNodes.isEmpty()) {
+                    visitExp(expNodes.get(0));
+                    value = IRPort.buildGetelementptr(pointerType, currentBasicBlock, load, currentValue);
+                    if (pointerType.getPointToType() instanceof ArrayType) {
+                        arrayType = (ArrayType) (pointerType.getPointToType());
+
+                        if (expNodes.size() == 1) {
+                            value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+                        }
+                    }
+
+                    for (int i = 1; i < expNodes.size(); i++) {
+                        visitExp(expNodes.get(i));
+                        value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), currentValue);
+                        if (arrayType.getElementType() instanceof ArrayType) {
+                            arrayType = ((ArrayType) arrayType.getElementType());
+
+                            if (i == expNodes.size() - 1) {
+                                value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+                            }
+                        }
+                    }
+                }
+
+                currentValue = value;
+            }
+        } else {  // arrayType
+            ArrayType arrayType = ((ArrayType) value.getType());
+
+            for (int i = 0; i < expNodes.size(); i++) {
+                visitExp(expNodes.get(i));
+                value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), currentValue);
+
+                if (arrayType.getElementType() instanceof ArrayType) {
+                    arrayType = ((ArrayType) arrayType.getElementType());
+
+                    if (i == expNodes.size() - 1) {
+                        value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+                    }
                 }
             }
+
             currentValue = value;
-        } else {
-            // TODO
         }
     }
 
@@ -572,15 +1021,17 @@ public class Visitor {
                 visitLVal(lValNode);
                 currentInt = ((ConstantInt) currentValue).getVal();
             } else {
+                boolean nowIsCallingFunc = isCallingFunc;
+                if (isCallingFunc) {
+                    isCallingFunc = false;
+                }
                 visitLVal(lValNode);
-                if (!isCallingFunc) {
+                if (!nowIsCallingFunc) {
                     if (!(currentValue.getType() instanceof IntegerType)) {
                         if (((PointerType) currentValue.getType()).getPointToType() instanceof IntegerType) {
                             currentValue = IRPort.buildLoad(IRPort.getIntType(32), currentBasicBlock, currentValue);
                         }
                     }
-                } else {
-                    isCallingFunc = false;
                 }
             }
         } else {
@@ -699,7 +1150,7 @@ public class Visitor {
                 } else if (separator.isDiv()) {
                     currentValue = IRPort.buildSdiv(currentBasicBlock, leftOp, currentValue);
                 } else {
-                    currentValue = IRPort.buildSrem(currentBasicBlock, leftOp, currentValue); // TODO 可能含有错误
+                    currentValue = IRPort.buildSrem(currentBasicBlock, leftOp, currentValue);
                 }
             } else {
                 visitUnaryExp(unaryExpNode);
@@ -749,13 +1200,13 @@ public class Visitor {
     /*
         关系表达式 RelExp → AddExp | RelExp ('<' | '>' | '<=' | '>=') AddExp
      */
-    public void visitRelExp(RelExpNode relExpNode) {
+    public void visitRelExp(RelExpNode relExpNode, boolean first) {
         RelExpNode relExpNode1 = relExpNode.getRelExpNode();
         Word separator = relExpNode.getSeparator();
         AddExpNode addExpNode = relExpNode.getAddExpNode();
 
         if (relExpNode1 != null) {
-            visitRelExp(relExpNode1);
+            visitRelExp(relExpNode1, false);
             Value leftOp = currentValue;
 
             visitAddExp(addExpNode);
@@ -769,6 +1220,9 @@ public class Visitor {
                 currentValue = IRPort.buildIcmp(currentBasicBlock, IcmpType.SGE, leftOp, currentValue);
             }
         } else {
+            if (!first) {
+                isSingleJudge = false;
+            }
             visitAddExp(addExpNode);
         }
 
@@ -777,60 +1231,117 @@ public class Visitor {
     /*
         相等性表达式 EqExp → RelExp | EqExp ('==' | '!=') RelExp
      */
-    public void visitEqExp(EqExpNode eqExpNode) {
+    public void visitEqExp(EqExpNode eqExpNode, boolean first) {
         EqExpNode eqExpNode1 = eqExpNode.getEqExpNode();
         Word separator = eqExpNode.getSeparator();
         RelExpNode relExpNode = eqExpNode.getRelExpNode();
 
         if (eqExpNode1 != null) {
-            visitEqExp(eqExpNode1);
+            visitEqExp(eqExpNode1, false);
             Value leftOp = currentValue;
 
-            visitRelExp(relExpNode);
+            visitRelExp(relExpNode, true);
             if (separator.isEql()) {
                 currentValue = IRPort.buildIcmp(currentBasicBlock, IcmpType.EQ, leftOp, currentValue);
-            } else {
+            } else {  // NE
                 currentValue = IRPort.buildIcmp(currentBasicBlock, IcmpType.NE, leftOp, currentValue);
             }
         } else {
-            visitRelExp(relExpNode);
+            if (!first) {
+                isSingleJudge = false;
+            }
+            visitRelExp(relExpNode, true);
         }
     }
 
     /*
         逻辑与表达式 LAndExp → EqExp | LAndExp '&&' EqExp
      */
-    public void visitLAndExp(LAndExpNode lAndExpNode) {
+    public void visitLAndExp(LAndExpNode lAndExpNode, boolean first) {
         LAndExpNode lAndExpNode1 = lAndExpNode.getlAndExpNode();
         EqExpNode eqExpNode = lAndExpNode.getEqExpNode();
 
-        if (lAndExpNode1 != null) {
-            visitLAndExp(lAndExpNode1);
-            Value leftOp = currentValue;
+        BasicBlock ifBasicBlock = currentIfBasicBlock;
+        BasicBlock elseBasicBlock = currentElseBasicBlock;
 
-            visitEqExp(eqExpNode);
-            currentValue = IRPort.buildAnd(currentBasicBlock, leftOp, currentValue);
+        if (lAndExpNode1 != null) {
+            visitLAndExp(lAndExpNode1, false);
+
+            BasicBlock nextBasicBlock = IRPort.buildBasicBlock(currentFunction);
+            isSingleJudge = true;
+            visitEqExp(eqExpNode, true);
+            if (isSingleJudge) {
+                currentValue = IRPort.buildIcmp(currentBasicBlock, IcmpType.NE, currentValue, IRPort.getConstantInt(32, 0));
+                isSingleJudge = false;
+            }
+            IRPort.buildBrWithCondition(currentBasicBlock, currentValue, nextBasicBlock, elseBasicBlock);
+            currentBasicBlock = nextBasicBlock;
+
+            if (first) {
+                IRPort.buildBrNoCondition(currentBasicBlock, ifBasicBlock);
+            }
         } else {
-            visitEqExp(eqExpNode);
+            if (first) {
+                isSingleJudge = true;
+                visitEqExp(eqExpNode, true);
+                if (isSingleJudge) {
+                    currentValue = IRPort.buildIcmp(currentBasicBlock, IcmpType.NE, currentValue, IRPort.getConstantInt(32, 0));
+                    isSingleJudge = false;
+                }
+                IRPort.buildBrWithCondition(currentBasicBlock, currentValue, ifBasicBlock, elseBasicBlock);
+                currentBasicBlock = ifBasicBlock;
+            } else {
+                BasicBlock nextBasicBlock = IRPort.buildBasicBlock(currentFunction);
+                isSingleJudge = true;
+                visitEqExp(eqExpNode, true);
+                if (isSingleJudge) {
+                    currentValue = IRPort.buildIcmp(currentBasicBlock, IcmpType.NE, currentValue, IRPort.getConstantInt(32, 0));
+                    isSingleJudge = false;
+                }
+                IRPort.buildBrWithCondition(currentBasicBlock, currentValue, nextBasicBlock, elseBasicBlock);
+                currentBasicBlock = nextBasicBlock;
+            }
         }
+
+        currentIfBasicBlock = ifBasicBlock;
+        currentElseBasicBlock = elseBasicBlock;
     }
 
     /*
         逻辑或表达式 LOrExp → LAndExp | LOrExp '||' LAndExp
      */
-    public void visitLOrExp(LOrExpNode lOrExpNode) {
+    public void visitLOrExp(LOrExpNode lOrExpNode, boolean first) {
         LOrExpNode lOrExpNode1 = lOrExpNode.getlOrExpNode();
         LAndExpNode lAndExpNode = lOrExpNode.getlAndExpNode();
 
-        if (lOrExpNode1 != null) {
-            visitLOrExp(lOrExpNode1);
-            Value leftOp = currentValue;
+        BasicBlock ifBasicBlock = currentIfBasicBlock;
+        BasicBlock elseBasicBlock = currentElseBasicBlock;
 
-            visitLAndExp(lAndExpNode);
-            currentValue = IRPort.buildOr(currentBasicBlock, leftOp, currentValue);
+        if (lOrExpNode1 != null) {
+            visitLOrExp(lOrExpNode1, false);
+
+            if (!first) {
+                BasicBlock nextBasicBlock = IRPort.buildBasicBlock(currentFunction);
+                currentElseBasicBlock = nextBasicBlock;
+                visitLAndExp(lAndExpNode, true);
+                currentBasicBlock = nextBasicBlock;
+            } else {
+                visitLAndExp(lAndExpNode, true);
+            }
         } else {
-            visitLAndExp(lAndExpNode);
+            if (!first) {
+                BasicBlock nextBasicBlock = IRPort.buildBasicBlock(currentFunction);
+                currentElseBasicBlock = nextBasicBlock;
+;
+                visitLAndExp(lAndExpNode, true);
+                currentBasicBlock = nextBasicBlock;
+            } else {
+                visitLAndExp(lAndExpNode, true);
+            }
         }
+
+        currentIfBasicBlock = ifBasicBlock;
+        currentElseBasicBlock = elseBasicBlock;
     }
 
     /*

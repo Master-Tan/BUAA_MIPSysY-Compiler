@@ -21,4 +21,8 @@ public class User extends Value {
         return values.get(index);
     }
 
+    public int getValueNum() {
+        return values.size();
+    }
+
 }

@@ -1,5 +1,6 @@
 package midend.ir.values.constant;
 
+import backend.operand.Imm;
 import midend.ir.types.FunctionType;
 import midend.ir.types.IntegerType;
 import midend.ir.types.PointerType;
@@ -69,6 +70,10 @@ public class Function extends Constant {
 
     public ArrayList<BasicBlock> getBasicBlocks() {
         return basicBlocks;
+    }
+
+    public boolean isBuiltIn() {
+        return isBuiltIn;
     }
 
     @Override

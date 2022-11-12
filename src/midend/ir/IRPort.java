@@ -17,7 +17,7 @@ public class IRPort {
     public static Add buildAdd(BasicBlock parent, Value op1, Value op2) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        Add ans = new Add("_" + nameNum, parent, op1, op2);
+        Add ans = new Add("_" + nameNum, parent, checkIntegerType(parent, op1), checkIntegerType(parent, op2));
         parent.addInstruction(ans);
         return ans;
     }
@@ -25,7 +25,7 @@ public class IRPort {
     public static And buildAnd(BasicBlock parent, Value op1, Value op2) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        And ans = new And("_" + nameNum, parent, op1, op2);
+        And ans = new And("_" + nameNum, parent, checkIntegerType(parent, op1), checkIntegerType(parent, op2));
         parent.addInstruction(ans);
         return ans;
     }
@@ -33,7 +33,7 @@ public class IRPort {
     public static Icmp buildIcmp(BasicBlock parent, IcmpType icmpType, Value op1, Value op2) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        Icmp ans = new Icmp("_" + nameNum, parent, op1, op2, icmpType);
+        Icmp ans = new Icmp("_" + nameNum, parent, checkIntegerType(parent, op1), checkIntegerType(parent, op2), icmpType);
         parent.addInstruction(ans);
         return ans;
     }
@@ -41,7 +41,7 @@ public class IRPort {
     public static Mul buildMul(BasicBlock parent, Value op1, Value op2) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        Mul ans = new Mul("_" + nameNum, parent, op1, op2);
+        Mul ans = new Mul("_" + nameNum, parent, checkIntegerType(parent, op1), checkIntegerType(parent, op2));
         parent.addInstruction(ans);
         return ans;
     }
@@ -49,7 +49,7 @@ public class IRPort {
     public static Or buildOr(BasicBlock parent, Value op1, Value op2) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        Or ans = new Or("_" + nameNum, parent, op1, op2);
+        Or ans = new Or("_" + nameNum, parent, checkIntegerType(parent, op1), checkIntegerType(parent, op2));
         parent.addInstruction(ans);
         return ans;
     }
@@ -57,7 +57,7 @@ public class IRPort {
     public static Sdiv buildSdiv(BasicBlock parent, Value op1, Value op2) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        Sdiv ans = new Sdiv("_" + nameNum, parent, op1, op2);
+        Sdiv ans = new Sdiv("_" + nameNum, parent, checkIntegerType(parent, op1), checkIntegerType(parent, op2));
         parent.addInstruction(ans);
         return ans;
     }
@@ -65,7 +65,7 @@ public class IRPort {
     public static Srem buildSrem(BasicBlock parent, Value op1, Value op2) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        Srem ans = new Srem("_" + nameNum, parent, op1, op2);
+        Srem ans = new Srem("_" + nameNum, parent, checkIntegerType(parent, op1), checkIntegerType(parent, op2));
         parent.addInstruction(ans);
         return ans;
     }
@@ -73,7 +73,7 @@ public class IRPort {
     public static Sub buildSub(BasicBlock parent, Value op1, Value op2) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        Sub ans = new Sub("_" + nameNum, parent, op1, op2);
+        Sub ans = new Sub("_" + nameNum, parent, checkIntegerType(parent, op1), checkIntegerType(parent, op2));
         parent.addInstruction(ans);
         return ans;
     }
@@ -87,9 +87,36 @@ public class IRPort {
         return ans;
     }
 
-    public static Getelementptr buildGetelementptr(BasicBlock parent, Value op1, Value op2) {
-        // TODO
-        return null;
+    public static Getelementptr buildGetelementptr(PointerType baseType, BasicBlock parent, Value base, Value pointIndex) {
+        int nameNum = nameNumCounter;
+        nameNumCounter++;
+        Getelementptr ans = new Getelementptr("_" + nameNum, baseType, parent, base, pointIndex);
+        parent.addInstruction(ans);
+        return ans;
+    }
+
+    public static Getelementptr buildGetelementptr(ArrayType baseType, BasicBlock parent, Value base, Value pointIndex) {
+        int nameNum = nameNumCounter;
+        nameNumCounter++;
+        Getelementptr ans = new Getelementptr("_" + nameNum, baseType, parent, base, pointIndex);
+        parent.addInstruction(ans);
+        return ans;
+    }
+
+    public static Getelementptr buildGetelementptr(PointerType baseType, BasicBlock parent, Value base, Value pointIndex, Value arrayIndex) {
+        int nameNum = nameNumCounter;
+        nameNumCounter++;
+        Getelementptr ans = new Getelementptr("_" + nameNum, baseType, parent, base, pointIndex, arrayIndex);
+        parent.addInstruction(ans);
+        return ans;
+    }
+
+    public static Getelementptr buildGetelementptr(ArrayType baseType, BasicBlock parent, Value base, Value pointIndex, Value arrayIndex) {
+        int nameNum = nameNumCounter;
+        nameNumCounter++;
+        Getelementptr ans = new Getelementptr("_" + nameNum, baseType, parent, base, pointIndex, arrayIndex);
+        parent.addInstruction(ans);
+        return ans;
     }
 
     public static Load buildLoad(Type type, BasicBlock parent, Value location) {
@@ -157,10 +184,10 @@ public class IRPort {
         return ans;
     }
 
-    public static BasicBlock buildBasicBlock(String name, Function parent) {
+    public static BasicBlock buildBasicBlock(Function parent) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        BasicBlock ans = new BasicBlock(name + "_" + nameNum, parent);
+        BasicBlock ans = new BasicBlock("_" + nameNum, parent);
         parent.addBasicBlock(ans);
         return ans;
     }
@@ -186,11 +213,23 @@ public class IRPort {
         return new IntegerType(bits);
     }
 
+    public static ArrayType getArrayType(Type elementType, int elementNum) {
+        return new ArrayType(elementType, elementNum);
+    }
+
+    public static PointerType getPointerType(Type type) {
+        return new PointerType(type);
+    }
+
     public static ConstantInt getConstantInt(int bits, int val) {
         return new ConstantInt(bits, val);
     }
 
-    public static GlobalVariable getGlobalVariable(String name, Type type) {
+    public static ConstantArray getConstantArray(ArrayList<Constant> array) {
+        return new ConstantArray(array);
+    }
+
+    public static GlobalVariable getZeroGlobalVariable(String name, Type type) {
         return new GlobalVariable(name, type);
     }
 
@@ -198,4 +237,12 @@ public class IRPort {
         return new GlobalVariable(name, initVal, isConst);
     }
 
+    // checker
+    public static Value checkIntegerType(BasicBlock parent, Value op) {
+        if (((IntegerType)  op.getType()).getBits() == 1) {
+            return IRPort.buildZextTo(parent, op, new IntegerType(32));
+        } else {
+            return op;
+        }
+    }
 }

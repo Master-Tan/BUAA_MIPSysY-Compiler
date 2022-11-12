@@ -23,4 +23,15 @@ public class StmtBranchNode extends StmtNode {
         this.stmtNodeElse = null;
     }
 
+    public CondNode getCondNode() {
+        return condNode;
+    }
+
+    public StmtNode getStmtNodeIf() {
+        return stmtNodeIf;
+    }
+
+    public StmtNode getStmtNodeElse() {
+        return stmtNodeElse;
+    }
 }

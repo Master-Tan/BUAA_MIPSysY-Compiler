@@ -1,9 +1,12 @@
 package midend.ir.values.constant;
 
 import midend.ir.types.ArrayType;
+import midend.ir.types.IntegerType;
 import midend.ir.types.PointerType;
 import midend.ir.types.Type;
 import midend.ir.values.Module;
+
+import java.util.ArrayList;
 
 public class GlobalVariable extends Constant {
 
@@ -18,7 +21,6 @@ public class GlobalVariable extends Constant {
     // 操作数：默认缺省初值为零或者零数组
     public GlobalVariable(String name, Type type) {
         super("@" + name, new PointerType(type), Module.getInstance(), Constant.getZeroConstant(type));
-        // TODO 零数组
         isInit = false;
         isConst = false;
     }
@@ -33,11 +35,14 @@ public class GlobalVariable extends Constant {
 
     // 字符串常量
     public GlobalVariable(String str) {
-        super("@str_" + stringId, new PointerType(new ArrayType()), Module.getInstance(), new ConstantString(str));
-        // TODO
+        super("@str_" + stringId, new PointerType(new ArrayType(new IntegerType(8), str.length() + 1)), Module.getInstance(), new ConstantString(str));
         stringId++;
         isInit = true;
         isConst = true;
+    }
+
+    public Constant getVal() {
+        return ((Constant) this.getUsedValue(0));
     }
 
     @Override
