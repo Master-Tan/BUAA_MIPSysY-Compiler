@@ -355,7 +355,6 @@ public class GrammaticalAnalyzer {
 
         UnaryExpNode unaryExpNode = unaryExp();
 
-
         MulExpNode mulExpNode = new MulExpNode(unaryExpNode, line);
 
         while (words.get(index).isMult() ||

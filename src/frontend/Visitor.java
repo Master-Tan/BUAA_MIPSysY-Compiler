@@ -30,7 +30,6 @@ public class Visitor {
     private ArrayList<Type> currentTypeArray;
     private BasicBlock currentIfBasicBlock;
     private BasicBlock currentElseBasicBlock;
-    private BasicBlock currentNextBasicBlock;
     private BasicBlock currentBreakBasicBlock;
     private BasicBlock currentContinueBasicBlock;
     private ArrayList<Integer> currentDimensions;
@@ -180,23 +179,13 @@ public class Visitor {
 
                 ArrayList<Value> constantArray = new ArrayList<>();
 
-                boolean isZero = true;
                 for (Value value : currentArray) {
-                    if (value instanceof ConstantInt) {
-                        if (((ConstantInt) value).getVal() != 0) {
-                            isZero = false;
-                        }
-                    } else {
-                        isZero = false;
-                    }
                     constantArray.add(value);
                 }
 
-                if (!isZero) {
-                    currentArrayIndex = 0;
-                    constArrayInit(arrayType, alloca, dimensions, constantArray, 1);
-                    currentArrayIndex = 0;
-                }
+                currentArrayIndex = 0;
+                constArrayInit(arrayType, alloca, dimensions, constantArray, 1);
+                currentArrayIndex = 0;
             }
 
         }
@@ -369,23 +358,13 @@ public class Visitor {
 
                     ArrayList<Value> valArray = new ArrayList<>();
 
-                    boolean isZero = true;
                     for (Value value : currentArray) {
-                        if (value instanceof ConstantInt) {
-                            if (((ConstantInt) value).getVal() != 0) {
-                                isZero = false;
-                            }
-                        } else {
-                            isZero = false;
-                        }
                         valArray.add(value);
                     }
 
-                    if (!isZero) {
-                        currentArrayIndex = 0;
-                        constArrayInit(arrayType, alloca, dimensions, valArray, 1);
-                        currentArrayIndex = 0;
-                    }
+                    currentArrayIndex = 0;
+                    constArrayInit(arrayType, alloca, dimensions, valArray, 1);
+                    currentArrayIndex = 0;
                 }
             }
         }
@@ -847,6 +826,8 @@ public class Visitor {
 
         expCnt = 0;
 
+
+
         for (int i = 0; i < strArray.length; i++) {
             boolean isPutChar = false;
             boolean isChangeLine = false;
@@ -917,7 +898,6 @@ public class Visitor {
         Word ident = lValNode.getIdent();
         ArrayList<ExpNode> expNodes = lValNode.getExpNodes();
 
-
         String valueName = ident.getWordValue();
         Value value = null;
         for (int i = symbolValIndex; i >= 0; i--) {
@@ -926,7 +906,6 @@ public class Visitor {
                 break;
             }
         }
-
         if (value.getType() instanceof IntegerType) {
             currentValue = value;
         } else if (value.getType() instanceof PointerType) {
@@ -936,18 +915,29 @@ public class Visitor {
             } else if (type instanceof ArrayType) {  // arrayType
                 ArrayType arrayType = ((ArrayType) type);
 
-                if (expNodes.isEmpty()) {
-                    value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+                if (isGlobalInit || isConstant) {
+                    if (!expNodes.isEmpty()) {
+                        value = ((GlobalVariable) value).getVal();
+                        for (int i = 0; i < expNodes.size(); i++) {
+                            visitExp(expNodes.get(i));
+
+                            value = (((ConstantArray) value).getUsedValue(currentInt));
+                        }
+                    }
                 } else {
-                    for (int i = 0; i < expNodes.size(); i++) {
-                        visitExp(expNodes.get(i));
-                        value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), currentValue);
+                    if (expNodes.isEmpty()) {
+                        value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+                    } else {
+                        for (int i = 0; i < expNodes.size(); i++) {
+                            visitExp(expNodes.get(i));
+                            value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), currentValue);
 
-                        if (arrayType.getElementType() instanceof ArrayType) {
-                            arrayType = ((ArrayType) arrayType.getElementType());
+                            if (arrayType.getElementType() instanceof ArrayType) {
+                                arrayType = ((ArrayType) arrayType.getElementType());
 
-                            if (i == expNodes.size() - 1) {
-                                value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+                                if (i == expNodes.size() - 1) {
+                                    value = IRPort.buildGetelementptr(arrayType, currentBasicBlock, value, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+                                }
                             }
                         }
                     }

@@ -77,14 +77,14 @@ public class Compiler {
         System.out.println(myModule.toString());
 
         // MIPS 生成
-//        try {
-//            IOTool.changeSystemoutToFile("mips.txt");
-////            System.setOut(systemOut);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        Backend backend = new Backend();
-//        System.out.println(backend.getMIPS());
+        try {
+            IOTool.changeSystemoutToFile("mips.txt");
+//            System.setOut(systemOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Backend backend = new Backend();
+        System.out.println(backend.getMIPS());
 
     }
 
