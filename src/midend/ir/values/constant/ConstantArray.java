@@ -21,6 +21,18 @@ public class ConstantArray extends Constant {
         this.isZeroInitializer = false;
     }
 
+    public ArrayList<Integer> getVal() {
+        ArrayList<Integer> val = new ArrayList<>();
+        for (int i = 0; i < ((ArrayType) this.getType()).getElementNum(); i++) {
+            if (this.getUsedValue(i) instanceof ConstantArray) {
+                val.addAll(((ConstantArray) this.getUsedValue(i)).getVal());
+            } else {
+                val.add(((ConstantInt) this.getUsedValue(i)).getVal());
+            }
+        }
+        return val;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

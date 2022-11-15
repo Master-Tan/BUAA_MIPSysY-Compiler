@@ -5,6 +5,7 @@ import backend.Instructions.MIPSli;
 import backend.Instructions.MIPSsyscall;
 import backend.operand.Imm;
 import backend.operand.Reg;
+import midend.ir.types.PointerType;
 import midend.ir.values.Argument;
 import midend.ir.values.constant.Function;
 
@@ -23,6 +24,8 @@ public class MipsFunction {
     private HashMap<String, Integer> nameToFp = new HashMap<>();
     // <pointer, fpOffset>
     private HashMap<String, Integer> pointToFp = new HashMap<>();
+    // the fp store fp?
+    private ArrayList<String> isArrayIndex = new ArrayList<>();
 
     public MipsFunction(String name, Function function) {
         this.name = name;
@@ -31,8 +34,15 @@ public class MipsFunction {
 
         for (Argument argument : function.getArguments()) {
             nameToFp.put(argument.getName().substring(1), functionFP);
+            if (argument.getType() instanceof PointerType) {
+                isArrayIndex.add(argument.getName().substring(1));
+            }
             functionFP += 4;
         }
+    }
+
+    public String getName() {
+        return name;
     }
 
     public void addMipsBasicBlock(MipsBasicBlock mipsBasicBlock) {
@@ -63,6 +73,14 @@ public class MipsFunction {
         functionFP += offset;
     }
 
+    public void addIsArrayIndex(String name) {
+        this.isArrayIndex.add(name);
+    }
+
+    public ArrayList<String> getIsArrayIndex() {
+        return isArrayIndex;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -74,13 +92,6 @@ public class MipsFunction {
             // 输出block
             for (MipsBasicBlock mipsBasicBlock : mipsBasicBlocks) {
                 sb.append(mipsBasicBlock.toString());
-            }
-
-            if (!this.name.equals("main")) {
-                sb.append(new MIPSjr(new Reg(31)).toString() + "\n");
-            } else {
-                sb.append(new MIPSli(new Reg(2), new Imm(10)) + "\n");
-                sb.append(new MIPSsyscall() + "\n");
             }
 
             sb.append("\n");

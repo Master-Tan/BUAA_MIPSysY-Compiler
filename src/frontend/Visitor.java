@@ -162,7 +162,7 @@ public class Visitor {
                         }
                         constantArray = nowConstantArray;
                     }
-                    Constant initVal = IRPort.getConstantArray(constantArray);
+                    ConstantArray initVal = IRPort.getConstantArray(constantArray);
                     globalVariable = IRPort.getGlobalVariable(varName, initVal, true);
                 }
 
@@ -826,42 +826,53 @@ public class Visitor {
 
         expCnt = 0;
 
-
-
         for (int i = 0; i < strArray.length; i++) {
-            boolean isPutChar = false;
-            boolean isChangeLine = false;
+            String str;
+            boolean isPutInt = false;
             if (i == strArray.length - 1) {
-                isPutChar = true;
+                str = String.valueOf(strArray[i]);
             } else {
-                if (strArray[i] == '%' && strArray[i + 1] == 'd') {
+                StringBuilder sb = new StringBuilder();
+                while (i < strArray.length) {
+                    if (i == strArray.length - 1) {
+                        sb.append(strArray[i]);
+                        break;
+                    } else {
+                        if (strArray[i] == '%' && strArray[i + 1] == 'd') {
+                            i++;
+                            isPutInt = true;
+                            break;
+                        } else if (strArray[i] == '\\' && strArray[i + 1] == 'n') {
+                            i += 2;
+                            sb.append("\n");
+                            continue;
+                        }
+                        sb.append(strArray[i]);
+                    }
                     i++;
-                } else if (strArray[i] == '\\' && strArray[i + 1] == 'n') {
-                    isPutChar = true;
-                    isChangeLine = true;
-                    i++;
-                } else {
-                    isPutChar = true;
                 }
+                str = sb.toString();
             }
-            if (isPutChar) {
-                // 函数调用
-                String funcName = "putch";
-                Function calledFunction = Module.getInstance().getFunction("@" + funcName);
-                ArrayList<Value> args = new ArrayList<>();
+            // 函数调用
+            String funcName = "putstr";
+            Function calledFunction = Module.getInstance().getFunction("@" + funcName);
+            ArrayList<Value> args = new ArrayList<>();
 
-                if (isChangeLine) {
-                    args.add(IRPort.getConstantInt(32, '\n'));
-                } else {
-                    args.add(IRPort.getConstantInt(32, strArray[i]));
-                }
+            GlobalVariable globalVariable = IRPort.getStringGlobalVariable(str);
 
-                currentValue = IRPort.buildCallNoReturn(currentBasicBlock, calledFunction, args);
-            } else {
+            symbolVal.get(symbolValIndex).put(globalVariable.getName(), globalVariable);
+            Module.getInstance().addGlobalVariable(globalVariable);
+
+            Value value = IRPort.buildGetelementptr((PointerType) globalVariable.getType(), currentBasicBlock, globalVariable, IRPort.getConstantInt(32, 0), IRPort.getConstantInt(32, 0));
+
+            args.add(value);
+
+            currentValue = IRPort.buildCallNoReturn(currentBasicBlock, calledFunction, args);
+            if (isPutInt) {
                 // 函数调用
-                String funcName = "putint";
-                Function calledFunction = Module.getInstance().getFunction("@" + funcName);
-                ArrayList<Value> args = new ArrayList<>();
+                funcName = "putint";
+                calledFunction = Module.getInstance().getFunction("@" + funcName);
+                args = new ArrayList<>();
 
                 args.add(expValues.get(expCnt));
                 expCnt++;
@@ -869,7 +880,6 @@ public class Visitor {
                 currentValue = IRPort.buildCallNoReturn(currentBasicBlock, calledFunction, args);
             }
         }
-
 
     }
 

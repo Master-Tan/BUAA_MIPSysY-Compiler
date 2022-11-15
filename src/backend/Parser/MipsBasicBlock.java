@@ -36,7 +36,7 @@ public class MipsBasicBlock {
 
         // 2. 按序输出指令
         for (MipsInstruction mipsInstruction : mipsInstructions) {
-            sb.append(mipsInstruction.toString() + "\n");
+            sb.append("\t" + mipsInstruction.toString() + "\n");
         }
 
 

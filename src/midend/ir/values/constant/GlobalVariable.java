@@ -15,6 +15,7 @@ public class GlobalVariable extends Constant {
 
     private boolean isConst;
     private boolean isInit;
+    private boolean isString;
     private static int stringId = 0;
 
     // 没初值
@@ -23,6 +24,7 @@ public class GlobalVariable extends Constant {
         super("@" + name, new PointerType(type), Module.getInstance(), Constant.getZeroConstant(type));
         isInit = false;
         isConst = false;
+        isString = false;
     }
 
     // 有初值
@@ -31,6 +33,7 @@ public class GlobalVariable extends Constant {
         super("@" + name, new PointerType(initVal.getType()), Module.getInstance(), initVal);
         isInit = true;
         this.isConst = isConst;
+        isString = false;
     }
 
     // 字符串常量
@@ -39,10 +42,19 @@ public class GlobalVariable extends Constant {
         stringId++;
         isInit = true;
         isConst = true;
+        isString = true;
     }
 
     public Constant getVal() {
         return ((Constant) this.getUsedValue(0));
+    }
+
+    public boolean isInit() {
+        return isInit;
+    }
+
+    public boolean isString() {
+        return isString;
     }
 
     @Override

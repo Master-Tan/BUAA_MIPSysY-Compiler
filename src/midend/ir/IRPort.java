@@ -187,7 +187,7 @@ public class IRPort {
     public static BasicBlock buildBasicBlock(Function parent) {
         int nameNum = nameNumCounter;
         nameNumCounter++;
-        BasicBlock ans = new BasicBlock("_" + nameNum, parent);
+        BasicBlock ans = new BasicBlock("Function" + "_" + parent.getName().substring(1) + "_" + "BasicBlock" + "_" + nameNum, parent);
         parent.addBasicBlock(ans);
         return ans;
     }
@@ -229,12 +229,20 @@ public class IRPort {
         return new ConstantArray(array);
     }
 
+    public static ConstantString getConstantString(String str) {
+        return new ConstantString(str);
+    }
+
     public static GlobalVariable getZeroGlobalVariable(String name, Type type) {
         return new GlobalVariable(name, type);
     }
 
     public static GlobalVariable getGlobalVariable(String name, Constant initVal, boolean isConst) {
         return new GlobalVariable(name, initVal, isConst);
+    }
+
+    public static GlobalVariable getStringGlobalVariable(String str) {
+        return new GlobalVariable(str);
     }
 
     // checker

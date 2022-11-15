@@ -13,6 +13,10 @@ public class Icmp extends BinaryOperatorInstruction {
         this.icmpType = icmpType;
     }
 
+    public IcmpType getIcmpType() {
+        return icmpType;
+    }
+
     @Override
     public String toString() {
         return this.getName() + " = icmp " + this.icmpType.toString() + " " +

@@ -25,7 +25,7 @@ public class ArrayType extends Type {
 
     @Override
     public int getSize() {
-        return 0;
+        return elementType.getSize() * elementNum;
     }
 
     @Override

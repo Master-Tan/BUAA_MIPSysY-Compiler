@@ -23,6 +23,10 @@ public class Br extends TerminatorInstruction {
         isCondition = true;
     }
 
+    public boolean isCondition() {
+        return isCondition;
+    }
+
     @Override
     public String toString() {
         if (this.isCondition) {

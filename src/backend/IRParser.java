@@ -5,6 +5,7 @@ import backend.Parser.*;
 import backend.operand.Imm;
 import backend.operand.Label;
 import backend.operand.Reg;
+import midend.ir.types.ArrayType;
 import midend.ir.types.IntegerType;
 import midend.ir.types.PointerType;
 import midend.ir.values.BasicBlock;
@@ -70,9 +71,86 @@ public class IRParser {
             } else if (instruction instanceof And) {
                 buildBinaryInstruction(instruction, mipsFunction, mipsBasicBlock, MIPSBinaryType.and);
             } else if (instruction instanceof Icmp) {
-                // TODO
+                if (instruction.getUsedValue(0) instanceof ConstantInt) {
+                    int val1 = ((ConstantInt) instruction.getUsedValue(0)).getVal();
+                    MIPSli mipsLi1 = new MIPSli(new Reg(8), new Imm(val1));
+                    mipsBasicBlock.addMipsInstruction(mipsLi1);
+                } else {
+                    String op1 = instruction.getUsedValue(0).getName().substring(1);
+                    int fpOffset1 = mipsFunction.getNameToFp().get(op1);
+                    MIPSlw mipsLw1 = new MIPSlw(new Reg(8), new Imm(fpOffset1), new Reg(30));
+                    mipsBasicBlock.addMipsInstruction(mipsLw1);
+                }
+
+                if (instruction.getUsedValue(1) instanceof ConstantInt) {
+                    int val2 = ((ConstantInt) instruction.getUsedValue(1)).getVal();
+                    MIPSli mipsLi2 = new MIPSli(new Reg(9), new Imm(val2));
+                    mipsBasicBlock.addMipsInstruction(mipsLi2);
+                } else {
+                    String op2 = instruction.getUsedValue(1).getName().substring(1);
+                    int fpOffset2 = mipsFunction.getNameToFp().get(op2);
+                    MIPSlw mipsLw2 = new MIPSlw(new Reg(9), new Imm(fpOffset2), new Reg(30));
+                    mipsBasicBlock.addMipsInstruction(mipsLw2);
+                }
+
+
+                IcmpType icmpType = ((Icmp) instruction).getIcmpType();
+                if (icmpType == IcmpType.EQ) {
+                    MIPSIcmp mipsIcmp = new MIPSIcmp(MIPSIcmp.MIPSIcmpType.SEQ, new Reg(10), new Reg(8), new Reg(9));
+                    mipsBasicBlock.addMipsInstruction(mipsIcmp);
+                } else if (icmpType == IcmpType.NE) {
+                    MIPSIcmp mipsIcmp = new MIPSIcmp(MIPSIcmp.MIPSIcmpType.SNE, new Reg(10), new Reg(8), new Reg(9));
+                    mipsBasicBlock.addMipsInstruction(mipsIcmp);
+                } else if (icmpType == IcmpType.SGE) {
+                    MIPSIcmp mipsIcmp = new MIPSIcmp(MIPSIcmp.MIPSIcmpType.SGE, new Reg(10), new Reg(8), new Reg(9));
+                    mipsBasicBlock.addMipsInstruction(mipsIcmp);
+                } else if (icmpType == IcmpType.SGT) {
+                    MIPSIcmp mipsIcmp = new MIPSIcmp(MIPSIcmp.MIPSIcmpType.SGT, new Reg(10), new Reg(8), new Reg(9));
+                    mipsBasicBlock.addMipsInstruction(mipsIcmp);
+                } else if (icmpType == IcmpType.SLE) {
+                    MIPSIcmp mipsIcmp = new MIPSIcmp(MIPSIcmp.MIPSIcmpType.SLE, new Reg(10), new Reg(8), new Reg(9));
+                    mipsBasicBlock.addMipsInstruction(mipsIcmp);
+                } else if (icmpType == IcmpType.SLT) {
+                    MIPSIcmp mipsIcmp = new MIPSIcmp(MIPSIcmp.MIPSIcmpType.SLT, new Reg(10), new Reg(8), new Reg(9));
+                    mipsBasicBlock.addMipsInstruction(mipsIcmp);
+                }
+
+                int functionFPOffset = mipsFunction.getFunctionFP();
+                mipsFunction.addFunctionFP(4);
+                MIPSsw mipsSw = new MIPSsw(new Reg(10), new Imm(functionFPOffset), new Reg(30));
+                mipsBasicBlock.addMipsInstruction(mipsSw);
+                mipsFunction.addNameToFp(instruction.getName().substring(1), functionFPOffset);
             } else if (instruction instanceof Mul) {
-                buildBinaryInstruction(instruction, mipsFunction, mipsBasicBlock, MIPSBinaryType.mulu);
+                if (instruction.getUsedValue(0) instanceof ConstantInt) {
+                    int val1 = ((ConstantInt) instruction.getUsedValue(0)).getVal();
+                    MIPSli mipsLi1 = new MIPSli(new Reg(8), new Imm(val1));
+                    mipsBasicBlock.addMipsInstruction(mipsLi1);
+                } else {
+                    String op1 = instruction.getUsedValue(0).getName().substring(1);
+                    int fpOffset1 = mipsFunction.getNameToFp().get(op1);
+                    MIPSlw mipsLw1 = new MIPSlw(new Reg(8), new Imm(fpOffset1), new Reg(30));
+                    mipsBasicBlock.addMipsInstruction(mipsLw1);
+                }
+
+                if (instruction.getUsedValue(1) instanceof ConstantInt) {
+                    int val2 = ((ConstantInt) instruction.getUsedValue(1)).getVal();
+                    MIPSli mipsLi2 = new MIPSli(new Reg(9), new Imm(val2));
+                    mipsBasicBlock.addMipsInstruction(mipsLi2);
+                } else {
+                    String op2 = instruction.getUsedValue(1).getName().substring(1);
+                    int fpOffset2 = mipsFunction.getNameToFp().get(op2);
+                    MIPSlw mipsLw2 = new MIPSlw(new Reg(9), new Imm(fpOffset2), new Reg(30));
+                    mipsBasicBlock.addMipsInstruction(mipsLw2);
+                }
+
+                MIPSmulu mipsMulu = new MIPSmulu(new Reg(10), new Reg(8), new Reg(9));
+                mipsBasicBlock.addMipsInstruction(mipsMulu);
+
+                int functionFPOffset = mipsFunction.getFunctionFP();
+                mipsFunction.addFunctionFP(4);
+                MIPSsw mipsSw = new MIPSsw(new Reg(10), new Imm(functionFPOffset), new Reg(30));
+                mipsBasicBlock.addMipsInstruction(mipsSw);
+                mipsFunction.addNameToFp(instruction.getName().substring(1), functionFPOffset);
             } else if (instruction instanceof Or) {
                 buildBinaryInstruction(instruction, mipsFunction, mipsBasicBlock, MIPSBinaryType.or);
             } else if (instruction instanceof Sdiv) {
@@ -98,7 +176,7 @@ public class IRParser {
                     mipsBasicBlock.addMipsInstruction(mipsLw2);
                 }
 
-                MIPSdivu mipsDivu = new MIPSdivu(new Reg(8), new Reg(9));
+                MIPSdiv mipsDivu = new MIPSdiv(new Reg(8), new Reg(9));
                 mipsBasicBlock.addMipsInstruction(mipsDivu);
                 MIPSmflo mipsMflo = new MIPSmflo(new Reg(10));
                 mipsBasicBlock.addMipsInstruction(mipsMflo);
@@ -131,7 +209,7 @@ public class IRParser {
                     mipsBasicBlock.addMipsInstruction(mipsLw2);
                 }
 
-                MIPSdivu mipsDivu = new MIPSdivu(new Reg(8), new Reg(9));
+                MIPSdiv mipsDivu = new MIPSdiv(new Reg(8), new Reg(9));
                 mipsBasicBlock.addMipsInstruction(mipsDivu);
                 MIPSmfhi mipsMfhi = new MIPSmfhi(new Reg(10));
                 mipsBasicBlock.addMipsInstruction(mipsMfhi);
@@ -147,21 +225,158 @@ public class IRParser {
                 if (((PointerType) instruction.getType()).getPointToType() instanceof IntegerType) {
                     mipsFunction.addPointToFp(instruction.getName().substring(1), mipsFunction.getFunctionFP());
                     mipsFunction.addFunctionFP(4);
+                } else if (((PointerType) instruction.getType()).getPointToType() instanceof ArrayType){  // array alloca
+                    mipsFunction.addPointToFp(instruction.getName().substring(1), mipsFunction.getFunctionFP());
+                    mipsFunction.addFunctionFP(((PointerType) instruction.getType()).getPointToType().getSize());
+                } else {  // pointer alloca
+                    mipsFunction.addPointToFp(instruction.getName().substring(1), mipsFunction.getFunctionFP());
+                    mipsFunction.addIsArrayIndex(instruction.getName().substring(1));
+                    mipsFunction.addFunctionFP(((PointerType) instruction.getType()).getPointToType().getSize());
                 }
             } else if (instruction instanceof Getelementptr) {
-                // TODO
+                String base = instruction.getUsedValue(0).getName().substring(1);
+                if (mipsFunction.getPointToFp().containsKey(base)) {
+                    int fpOffset = mipsFunction.getPointToFp().get(base);
+
+                    if (mipsFunction.getIsArrayIndex().contains(base)) {
+                        MIPSlw mipsLw = new MIPSlw(new Reg(8), new Imm(fpOffset), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsLw);
+                    } else {
+                        MIPSli mipsLi = new MIPSli(new Reg(8), new Imm(fpOffset));
+                        mipsBasicBlock.addMipsInstruction(mipsLi);
+                    }
+
+
+                    if (instruction.getUsedValue(1) instanceof ConstantInt) {
+                        int val1 = ((ConstantInt) instruction.getUsedValue(1)).getVal();
+                        MIPSli mipsLi1 = new MIPSli(new Reg(9), new Imm(val1));
+                        mipsBasicBlock.addMipsInstruction(mipsLi1);
+                    } else {
+                        String op1 = instruction.getUsedValue(1).getName().substring(1);
+                        int fpOffset1 = mipsFunction.getNameToFp().get(op1);
+                        MIPSlw mipsLw1 = new MIPSlw(new Reg(9), new Imm(fpOffset1), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsLw1);
+                    }
+
+                    MIPSmulu mipsMulu = new MIPSmulu(new Reg(10), new Reg(9), new Imm(((PointerType) instruction.getUsedValue(0).getType()).getPointToType().getSize()));
+                    mipsBasicBlock.addMipsInstruction(mipsMulu);
+
+                    MIPSBinary mipsBinary = new MIPSBinary(MIPSBinaryType.addu, new Reg(11), new Reg(8), new Reg(10));
+                    mipsBasicBlock.addMipsInstruction(mipsBinary);
+
+                    if (instruction.getValueNum() == 3) {
+                        if (instruction.getUsedValue(2) instanceof ConstantInt) {
+                            int val2 = ((ConstantInt) instruction.getUsedValue(2)).getVal();
+                            MIPSli mipsLi2 = new MIPSli(new Reg(12), new Imm(val2));
+                            mipsBasicBlock.addMipsInstruction(mipsLi2);
+                        } else {
+                            String op2 = instruction.getUsedValue(2).getName().substring(1);
+                            int fpOffset2 = mipsFunction.getNameToFp().get(op2);
+                            MIPSlw mipsLw2 = new MIPSlw(new Reg(12), new Imm(fpOffset2), new Reg(30));
+                            mipsBasicBlock.addMipsInstruction(mipsLw2);
+                        }
+                        mipsMulu = new MIPSmulu(new Reg(13), new Reg(12), new Imm(((ArrayType) ((PointerType) instruction.getUsedValue(0).getType()).getPointToType()).getElementType().getSize()));
+                        mipsBasicBlock.addMipsInstruction(mipsMulu);
+
+                        mipsBinary = new MIPSBinary(MIPSBinaryType.addu, new Reg(14), new Reg(11), new Reg(13));
+                        mipsBasicBlock.addMipsInstruction(mipsBinary);
+
+                    }
+
+                    int functionFPOffset = mipsFunction.getFunctionFP();
+                    mipsFunction.addFunctionFP(4);
+                    if (instruction.getValueNum() == 3) {
+                        MIPSsw mipsSw = new MIPSsw(new Reg(14), new Imm(functionFPOffset), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsSw);
+                    } else {
+                        MIPSsw mipsSw = new MIPSsw(new Reg(11), new Imm(functionFPOffset), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsSw);
+                    }
+
+                    mipsFunction.addPointToFp(instruction.getName().substring(1), functionFPOffset);
+                    mipsFunction.addIsArrayIndex(instruction.getName().substring(1));  // TODO 可以转为直接存地址，而不是存对当前fp的偏移量
+                } else {
+                    MIPSla mipsLa = new MIPSla(new Reg(8), new Label(instruction.getUsedValue(0).getName().substring(1)));
+                        mipsBasicBlock.addMipsInstruction(mipsLa);
+
+                    if (instruction.getUsedValue(1) instanceof ConstantInt) {
+                        int val1 = ((ConstantInt) instruction.getUsedValue(1)).getVal();
+                        MIPSli mipsLi1 = new MIPSli(new Reg(9), new Imm(val1));
+                        mipsBasicBlock.addMipsInstruction(mipsLi1);
+                    } else {
+                        String op1 = instruction.getUsedValue(1).getName().substring(1);
+                        int fpOffset1 = mipsFunction.getNameToFp().get(op1);
+                        MIPSlw mipsLw1 = new MIPSlw(new Reg(9), new Imm(fpOffset1), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsLw1);
+                    }
+
+                    MIPSmulu mipsMulu = new MIPSmulu(new Reg(10), new Reg(9), new Imm(((PointerType) instruction.getUsedValue(0).getType()).getPointToType().getSize()));
+                    mipsBasicBlock.addMipsInstruction(mipsMulu);
+
+                    MIPSBinary mipsBinary = new MIPSBinary(MIPSBinaryType.addu, new Reg(11), new Reg(8), new Reg(10));
+                    mipsBasicBlock.addMipsInstruction(mipsBinary);
+                    if (instruction.getValueNum() == 3) {
+                        if (instruction.getUsedValue(2) instanceof ConstantInt) {
+                            int val2 = ((ConstantInt) instruction.getUsedValue(2)).getVal();
+                            MIPSli mipsLi2 = new MIPSli(new Reg(12), new Imm(val2));
+                            mipsBasicBlock.addMipsInstruction(mipsLi2);
+                        } else {
+                            String op2 = instruction.getUsedValue(2).getName().substring(1);
+                            int fpOffset2 = mipsFunction.getNameToFp().get(op2);
+                            MIPSlw mipsLw2 = new MIPSlw(new Reg(12), new Imm(fpOffset2), new Reg(30));
+                            mipsBasicBlock.addMipsInstruction(mipsLw2);
+                        }
+                        mipsMulu = new MIPSmulu(new Reg(13), new Reg(12), new Imm(((ArrayType) ((PointerType) instruction.getUsedValue(0).getType()).getPointToType()).getElementType().getSize()));
+                        mipsBasicBlock.addMipsInstruction(mipsMulu);
+
+                        mipsBinary = new MIPSBinary(MIPSBinaryType.addu, new Reg(14), new Reg(11), new Reg(13));
+                        mipsBasicBlock.addMipsInstruction(mipsBinary);
+
+                    }
+
+                    int functionFPOffset = mipsFunction.getFunctionFP();
+                    mipsFunction.addFunctionFP(4);
+                    if (instruction.getValueNum() == 3) {
+                        mipsBinary = new MIPSBinary(MIPSBinaryType.subu, new Reg(15), new Reg(14), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsBinary);
+                        MIPSsw mipsSw = new MIPSsw(new Reg(15), new Imm(functionFPOffset), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsSw);
+                    } else {
+                        mipsBinary = new MIPSBinary(MIPSBinaryType.subu, new Reg(15), new Reg(11), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsBinary);
+                        MIPSsw mipsSw = new MIPSsw(new Reg(15), new Imm(functionFPOffset), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsSw);
+                    }
+
+                    mipsFunction.addPointToFp(instruction.getName().substring(1), functionFPOffset);
+                    mipsFunction.addIsArrayIndex(instruction.getName().substring(1));
+                }
             } else if (instruction instanceof Load) {
                 String op = instruction.getUsedValue(0).getName().substring(1);
                 if (mipsFunction.getPointToFp().containsKey(op)) {
                     int fpOffset = mipsFunction.getPointToFp().get(op);
 
+                    if (mipsFunction.getIsArrayIndex().contains(op) && !(((Load) instruction).getType() instanceof PointerType)) {
+                        MIPSlw mipsLw = new MIPSlw(new Reg(9), new Imm(fpOffset), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsLw);
+                        MIPSBinary mipsBinary = new MIPSBinary(MIPSBinaryType.addu, new Reg(10), new Reg(9), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsBinary);
+                        mipsLw = new MIPSlw(new Reg(8), new Imm(0), new Reg(10));
+                        mipsBasicBlock.addMipsInstruction(mipsLw);
+                    } else {
+                        MIPSlw mipsLw = new MIPSlw(new Reg(8), new Imm(fpOffset), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsLw);
+                    }
+
                     int functionFPOffset = mipsFunction.getFunctionFP();
                     mipsFunction.addFunctionFP(4);
-                    MIPSlw mipsLw = new MIPSlw(new Reg(8), new Imm(fpOffset), new Reg(30));
                     MIPSsw mipsSw = new MIPSsw(new Reg(8), new Imm(functionFPOffset), new Reg(30));
-                    mipsFunction.addNameToFp(instruction.getName().substring(1), functionFPOffset);
-
-                    mipsBasicBlock.addMipsInstruction(mipsLw);
+                    if (((Load) instruction).getType() instanceof PointerType) {
+                        mipsFunction.addPointToFp(instruction.getName().substring(1), functionFPOffset);
+                        mipsFunction.addIsArrayIndex(instruction.getName().substring(1));
+                    } else {
+                        mipsFunction.addNameToFp(instruction.getName().substring(1), functionFPOffset);
+                    }
                     mipsBasicBlock.addMipsInstruction(mipsSw);
                 } else {
                     int functionFPOffset = mipsFunction.getFunctionFP();
@@ -175,20 +390,29 @@ public class IRParser {
                 }
 
             } else if (instruction instanceof Phi) {
-                // TODO
+                // TODO Phi
             } else if (instruction instanceof Store) {
                 if (instruction.getUsedValue(0) instanceof ConstantInt) {
-                    int val1 = ((ConstantInt) instruction.getUsedValue(0)).getVal();
-                    MIPSli mipsLi1 = new MIPSli(new Reg(8), new Imm(val1));
-                    mipsBasicBlock.addMipsInstruction(mipsLi1);
+                    int val = ((ConstantInt) instruction.getUsedValue(0)).getVal();
+                    MIPSli mipsLi = new MIPSli(new Reg(8), new Imm(val));
+                    mipsBasicBlock.addMipsInstruction(mipsLi);
 
-                    String op2 = instruction.getUsedValue(1).getName().substring(1);
-                    if (mipsFunction.getPointToFp().containsKey(op2)) {
-                        int fpOffset2 = mipsFunction.getPointToFp().get(op2);
-                        MIPSsw mipsSw = new MIPSsw(new Reg(8), new Imm(fpOffset2), new Reg(30));
-                        mipsBasicBlock.addMipsInstruction(mipsSw);
+                    String op = instruction.getUsedValue(1).getName().substring(1);
+                    if (mipsFunction.getPointToFp().containsKey(op)) {
+                        int fpOffset = mipsFunction.getPointToFp().get(op);
+                        if (mipsFunction.getIsArrayIndex().contains(op)) {
+                            MIPSlw mipsLw = new MIPSlw(new Reg(9), new Imm(fpOffset), new Reg(30));
+                            mipsBasicBlock.addMipsInstruction(mipsLw);
+                            MIPSBinary mipsBinary = new MIPSBinary(MIPSBinaryType.addu, new Reg(10), new Reg(9), new Reg(30));
+                            mipsBasicBlock.addMipsInstruction(mipsBinary);
+                            MIPSsw mipsSw = new MIPSsw(new Reg(8), new Imm(0), new Reg(10));
+                            mipsBasicBlock.addMipsInstruction(mipsSw);
+                        } else {
+                            MIPSsw mipsSw = new MIPSsw(new Reg(8), new Imm(fpOffset), new Reg(30));
+                            mipsBasicBlock.addMipsInstruction(mipsSw);
+                        }
                     } else {
-                        MIPSsw mipsSw = new MIPSsw(new Reg(8), new Label(op2));
+                        MIPSsw mipsSw = new MIPSsw(new Reg(8), new Label(op));
                         mipsBasicBlock.addMipsInstruction(mipsSw);
                     }
                 } else {
@@ -200,17 +424,60 @@ public class IRParser {
                     String op2 = instruction.getUsedValue(1).getName().substring(1);
                     if (mipsFunction.getPointToFp().containsKey(op2)) {
                         int fpOffset2 = mipsFunction.getPointToFp().get(op2);
-                        MIPSsw mipsSw = new MIPSsw(new Reg(8), new Imm(fpOffset2), new Reg(30));
-                        mipsBasicBlock.addMipsInstruction(mipsSw);
+                        if (mipsFunction.getIsArrayIndex().contains(op2) && !mipsFunction.getIsArrayIndex().contains(op1)) {
+                            mipsLw = new MIPSlw(new Reg(9), new Imm(fpOffset2), new Reg(30));
+                            mipsBasicBlock.addMipsInstruction(mipsLw);
+                            MIPSBinary mipsBinary = new MIPSBinary(MIPSBinaryType.addu, new Reg(10), new Reg(9), new Reg(30));
+                            mipsBasicBlock.addMipsInstruction(mipsBinary);
+                            MIPSsw mipsSw = new MIPSsw(new Reg(8), new Imm(0), new Reg(10));
+                            mipsBasicBlock.addMipsInstruction(mipsSw);
+                        } else {
+                            MIPSsw mipsSw = new MIPSsw(new Reg(8), new Imm(fpOffset2), new Reg(30));
+                            mipsBasicBlock.addMipsInstruction(mipsSw);
+                        }
                     } else {
                         MIPSsw mipsSw = new MIPSsw(new Reg(8), new Label(op2));
                         mipsBasicBlock.addMipsInstruction(mipsSw);
                     }
+
                 }
             } else if (instruction instanceof ZextTo) {
-                // TODO
+                if (instruction.getUsedValue(0) instanceof ConstantInt) {
+                    int val = ((ConstantInt) instruction.getUsedValue(0)).getVal();
+                    MIPSli mipsLi = new MIPSli(new Reg(8), new Imm(val));
+                    mipsBasicBlock.addMipsInstruction(mipsLi);
+                } else {
+                    String op = instruction.getUsedValue(0).getName().substring(1);
+                    int fpOffset = mipsFunction.getNameToFp().get(op);
+                    MIPSlw mipsLw = new MIPSlw(new Reg(8), new Imm(fpOffset), new Reg(30));
+                    mipsBasicBlock.addMipsInstruction(mipsLw);
+                }
+
+                int functionFPOffset = mipsFunction.getFunctionFP();
+                mipsFunction.addFunctionFP(4);
+                MIPSsw mipsSw = new MIPSsw(new Reg(8), new Imm(functionFPOffset), new Reg(30));
+                mipsBasicBlock.addMipsInstruction(mipsSw);
+                mipsFunction.addNameToFp(instruction.getName().substring(1), functionFPOffset);
             } else if (instruction instanceof Br) {
-                // TODO
+                if (((Br) instruction).isCondition()) {
+                    if (instruction.getUsedValue(0) instanceof ConstantInt) {
+                        int val = ((ConstantInt) instruction.getUsedValue(0)).getVal();
+                        MIPSli mipsLi = new MIPSli(new Reg(8), new Imm(val));
+                        mipsBasicBlock.addMipsInstruction(mipsLi);
+                    } else {
+                        String op = instruction.getUsedValue(0).getName().substring(1);
+                        int fpOffset = mipsFunction.getNameToFp().get(op);
+                        MIPSlw mipsLw = new MIPSlw(new Reg(8), new Imm(fpOffset), new Reg(30));
+                        mipsBasicBlock.addMipsInstruction(mipsLw);
+                    }
+                    MIPSbeq mipsBeq = new MIPSbeq(new Reg(8), new Imm(1), new Label(instruction.getUsedValue(1).getName().substring(1)));
+                    mipsBasicBlock.addMipsInstruction(mipsBeq);
+                    MIPSj mipsJ = new MIPSj(new Label(instruction.getUsedValue(2).getName().substring(1)));
+                    mipsBasicBlock.addMipsInstruction(mipsJ);
+                } else {
+                    MIPSj mipsJ = new MIPSj(new Label(instruction.getUsedValue(0).getName().substring(1)));
+                    mipsBasicBlock.addMipsInstruction(mipsJ);
+                }
             } else if (instruction instanceof Call) {
                 if (((Function) instruction.getUsedValue(0)).isBuiltIn()) {
                     if (instruction.getUsedValue(0).getName().equals("@getint")) {
@@ -252,7 +519,28 @@ public class IRParser {
                         MIPSsyscall mipsSyscall = new MIPSsyscall();
                         mipsBasicBlock.addMipsInstruction(mipsSyscall);
                     } else {
-                        // TODO @putstr
+                        MIPSli mipsLi = new MIPSli(new Reg(2), new Imm(4));
+                        mipsBasicBlock.addMipsInstruction(mipsLi);
+                        String op = instruction.getUsedValue(1).getName().substring(1);
+                        if (mipsFunction.getPointToFp().containsKey(op)) {
+                            int fpOffset = mipsFunction.getPointToFp().get(op);
+
+                            if (mipsFunction.getIsArrayIndex().contains(op)) {
+                                MIPSlw mipsLw = new MIPSlw(new Reg(9), new Imm(fpOffset), new Reg(30));
+                                mipsBasicBlock.addMipsInstruction(mipsLw);
+                                MIPSBinary mipsBinary = new MIPSBinary(MIPSBinaryType.addu, new Reg(4), new Reg(9), new Reg(30));
+                                mipsBasicBlock.addMipsInstruction(mipsBinary);
+                            } else {
+                                MIPSlw mipsLw = new MIPSlw(new Reg(4), new Imm(fpOffset), new Reg(30));
+                                mipsBasicBlock.addMipsInstruction(mipsLw);  // maybe wrong
+                            }
+                        } else {
+                            MIPSla mipsLa = new MIPSla(new Reg(4), new Label(op));
+                            mipsBasicBlock.addMipsInstruction(mipsLa);
+                        }
+
+                        MIPSsyscall mipsSyscall = new MIPSsyscall();
+                        mipsBasicBlock.addMipsInstruction(mipsSyscall);
                     }
                 } else {
                     // 压栈
@@ -272,10 +560,24 @@ public class IRParser {
                             MIPSli mipsLi = new MIPSli(new Reg(8), new Imm(val));
                             mipsBasicBlock.addMipsInstruction(mipsLi);
                         } else {
-                            String op1 = instruction.getUsedValue(i).getName().substring(1);
-                            int fpOffset = mipsFunction.getNameToFp().get(op1);
-                            MIPSlw mipsLw = new MIPSlw(new Reg(8), new Imm(fpOffset), new Reg(30));
-                            mipsBasicBlock.addMipsInstruction(mipsLw);
+                            String op = instruction.getUsedValue(i).getName().substring(1);
+                            if (mipsFunction.getNameToFp().containsKey(op)) {
+                                int fpOffset = mipsFunction.getNameToFp().get(op);
+                                MIPSlw mipsLw = new MIPSlw(new Reg(8), new Imm(fpOffset), new Reg(30));
+                                mipsBasicBlock.addMipsInstruction(mipsLw);
+                            } else {
+                                int fpOffset = mipsFunction.getPointToFp().get(op);
+
+                                if (mipsFunction.getIsArrayIndex().contains(op)) {
+                                    MIPSlw mipsLw = new MIPSlw(new Reg(9), new Imm(fpOffset), new Reg(30));
+                                    mipsBasicBlock.addMipsInstruction(mipsLw);
+                                    mipsBinaryI = new MIPSBinaryI(MIPSBinaryIType.addi, new Reg(8), new Reg(9), new Imm(-1 * functionFPOffset));
+                                    mipsBasicBlock.addMipsInstruction(mipsBinaryI);
+                                } else {
+                                    MIPSli mipsLi = new MIPSli(new Reg(8), new Imm(fpOffset));
+                                    mipsBasicBlock.addMipsInstruction(mipsLi);
+                                }
+                            }
                         }
                         mipsSw = new MIPSsw(new Reg(8), new Imm(functionFPOffset + 4 * (i - 1)), new Reg(30));
                         mipsBasicBlock.addMipsInstruction(mipsSw);
@@ -325,6 +627,19 @@ public class IRParser {
                         MIPSlw mipsLw = new MIPSlw(new Reg(2), new Imm(fpOffset), new Reg(30));
                         mipsBasicBlock.addMipsInstruction(mipsLw);
                     }
+                    if (!mipsFunction.getName().equals("main")) {
+                        MIPSjr mipsJr = new MIPSjr(new Reg(31));
+                        mipsBasicBlock.addMipsInstruction(mipsJr);
+                    } else {
+                        MIPSli mipsLi = new MIPSli(new Reg(2), new Imm(10));
+                        mipsBasicBlock.addMipsInstruction(mipsLi);
+                        MIPSsyscall mipsSyscall = new MIPSsyscall();
+                        mipsBasicBlock.addMipsInstruction(mipsSyscall);
+
+                    }
+                } else {
+                    MIPSjr mipsJr = new MIPSjr(new Reg(31));
+                    mipsBasicBlock.addMipsInstruction(mipsJr);
                 }
             }
         }
