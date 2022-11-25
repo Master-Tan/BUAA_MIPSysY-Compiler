@@ -57,34 +57,34 @@ public class Compiler {
 
         System.setErr(systemErr);
 
-//        if (errors.size() > 0) {
-//            System.err.println("has error!");
-//            return;
-//        }
+        if (errors.size() > 0) {
+            System.err.println("has error!");
+            return;
+        }
 
         // LLVM IR 生成
-//        try {
-//            IOTool.changeSystemoutToFile("llvm_ir.txt");
-////            System.setOut(systemOut);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        Module myModule = Module.getInstance();
-//
-//        Visitor visitor = new Visitor();
-//        visitor.visitCompUnit(myGrammaticalAnalyzer.getCompUnitNode());
-//
-//        System.out.println(myModule.toString());
-//
-//        // MIPS 生成
-//        try {
-//            IOTool.changeSystemoutToFile("mips.txt");
-////            System.setOut(systemOut);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        Backend backend = new Backend();
-//        System.out.println(backend.getMIPS());
+        try {
+            IOTool.changeSystemoutToFile("llvm_ir.txt");
+//            System.setOut(systemOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Module myModule = Module.getInstance();
+
+        Visitor visitor = new Visitor();
+        visitor.visitCompUnit(myGrammaticalAnalyzer.getCompUnitNode());
+
+        System.out.println(myModule.toString());
+
+        // MIPS 生成
+        try {
+            IOTool.changeSystemoutToFile("mips.txt");
+//            System.setOut(systemOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Backend backend = new Backend();
+        System.out.println(backend.getMIPS());
 
     }
 
