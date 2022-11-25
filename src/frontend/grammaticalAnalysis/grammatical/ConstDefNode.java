@@ -47,9 +47,9 @@ public class ConstDefNode extends Node {
     }
 
     public DataType getDataType() {
-        if (constExpNodes == null) {
+        if (constExpNodes.size() == 0) {
             return DataType.INT;
-        } else if (constExpNodes.size() == 0) {
+        } else if (constExpNodes.size() == 1) {
             return DataType.ARRAY1;
         } else {
             return DataType.ARRAY2;

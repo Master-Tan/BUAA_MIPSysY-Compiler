@@ -63,28 +63,28 @@ public class Compiler {
 //        }
 
         // LLVM IR 生成
-        try {
-            IOTool.changeSystemoutToFile("llvm_ir.txt");
-//            System.setOut(systemOut);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Module myModule = Module.getInstance();
-
-        Visitor visitor = new Visitor();
-        visitor.visitCompUnit(myGrammaticalAnalyzer.getCompUnitNode());
-
-        System.out.println(myModule.toString());
-
-        // MIPS 生成
-        try {
-            IOTool.changeSystemoutToFile("mips.txt");
-//            System.setOut(systemOut);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Backend backend = new Backend();
-        System.out.println(backend.getMIPS());
+//        try {
+//            IOTool.changeSystemoutToFile("llvm_ir.txt");
+////            System.setOut(systemOut);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        Module myModule = Module.getInstance();
+//
+//        Visitor visitor = new Visitor();
+//        visitor.visitCompUnit(myGrammaticalAnalyzer.getCompUnitNode());
+//
+//        System.out.println(myModule.toString());
+//
+//        // MIPS 生成
+//        try {
+//            IOTool.changeSystemoutToFile("mips.txt");
+////            System.setOut(systemOut);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        Backend backend = new Backend();
+//        System.out.println(backend.getMIPS());
 
     }
 

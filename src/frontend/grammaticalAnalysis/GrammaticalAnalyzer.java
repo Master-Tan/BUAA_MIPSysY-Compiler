@@ -422,7 +422,7 @@ public class GrammaticalAnalyzer {
 
         if (!unaryExpNode.checkErrorC(currentSymbolTable)) {
             if (!unaryExpNode.checkErrorD(currentSymbolTable)) {
-                    unaryExpNode.checkErrorE(currentSymbolTable);
+                unaryExpNode.checkErrorE(currentSymbolTable);
             }
         }
 
