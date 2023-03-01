@@ -1,2 +1,2 @@
-# MIPSysY-Compiler
-BUAA-2022-MIPSysY-Compiler
+# BUAA_MIPSysY-Compiler
+北航2022编译原理实验代码
