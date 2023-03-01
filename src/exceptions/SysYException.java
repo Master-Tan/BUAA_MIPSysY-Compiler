@@ -3,7 +3,7 @@ package exceptions;
 public class SysYException extends Exception {
 
     public enum ExceptionCode {
-        a, b, c, d, e, f, g, h, i, j, k, l, m;
+        a, b, c, d, e, f, g, h, i, j, k, l, m, p;
     }
 
     public ExceptionCode exceptionCode;

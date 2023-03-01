@@ -359,7 +359,8 @@ public class GrammaticalAnalyzer {
 
         while (words.get(index).isMult() ||
                 words.get(index).isDiv() ||
-                words.get(index).isMod()) {
+                words.get(index).isMod() ||
+                words.get(index).isBitand()) {
             printGrammaticalData("MulExp");
 
             Word separator = words.get(index);
@@ -603,9 +604,15 @@ public class GrammaticalAnalyzer {
         if (words.get(index).isAssign()) {
             printWord(words.get(index));
 
-            InitValNode initValNode = initVal();
-            varDefNode = new VarDefNode(ident, constExpNodes, initValNode, line);
-
+            if (words.get(index).isGetint()) {
+                varDefNode = new VarDefNode(ident, constExpNodes, true, line);
+                printWord(words.get(index));
+                printWord(words.get(index));
+                printWord(words.get(index));
+            } else {
+                InitValNode initValNode = initVal();
+                varDefNode = new VarDefNode(ident, constExpNodes, initValNode, line);
+            }
         } else {
             varDefNode = new VarDefNode(ident, constExpNodes, line);
         }

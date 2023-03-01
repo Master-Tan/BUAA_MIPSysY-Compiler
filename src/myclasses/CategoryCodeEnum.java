@@ -40,7 +40,8 @@ public class CategoryCodeEnum {
         LBRACK,
         RBRACK,
         LBRACE,
-        RBRACE
+        RBRACE,
+        BITAND
     }
 
 }

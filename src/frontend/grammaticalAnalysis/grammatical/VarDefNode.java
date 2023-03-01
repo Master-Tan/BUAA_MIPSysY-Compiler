@@ -12,12 +12,14 @@ public class VarDefNode extends Node {
     private Word ident;
     private ArrayList<ConstExpNode> constExpNodes;
     private InitValNode initValNode;
+    private boolean isGetint;
 
     public VarDefNode(Word ident, ArrayList<ConstExpNode> constExpNodes, int line) {
         super(line);
         this.ident = ident;
         this.constExpNodes = constExpNodes;
         this.initValNode = null;
+        this.isGetint = false;
     }
 
     public VarDefNode(Word ident, ArrayList<ConstExpNode> constExpNodes, InitValNode initValNode, int line) {
@@ -25,6 +27,15 @@ public class VarDefNode extends Node {
         this.ident = ident;
         this.constExpNodes = constExpNodes;
         this.initValNode = initValNode;
+        this.isGetint = false;
+    }
+
+    public VarDefNode(Word ident, ArrayList<ConstExpNode> constExpNodes, boolean isGetint, int line) {
+        super(line);
+        this.ident = ident;
+        this.constExpNodes = constExpNodes;
+        this.initValNode = null;
+        this.isGetint = isGetint;
     }
 
     public Word getIdent() {
@@ -37,6 +48,10 @@ public class VarDefNode extends Node {
 
     public InitValNode getInitValNode() {
         return initValNode;
+    }
+
+    public boolean isGetint() {
+        return isGetint;
     }
 
     @Override

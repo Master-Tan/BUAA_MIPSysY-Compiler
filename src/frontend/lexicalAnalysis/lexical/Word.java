@@ -183,4 +183,7 @@ public class Word {
         return this.categoryCode == CategoryCode.RBRACE;
     }
 
+    public boolean isBitand() {
+        return this.categoryCode == CategoryCode.BITAND;
+    }
 }

@@ -35,6 +35,7 @@ public class Separator extends Word {
         separatorWords.put("]", CategoryCode.RBRACK);
         separatorWords.put("{", CategoryCode.LBRACE);
         separatorWords.put("}", CategoryCode.RBRACE);
+        separatorWords.put("bitand", CategoryCode.BITAND);
         StringBuffer pattern = new StringBuffer();
         for (String separatorWord : separatorWords.keySet()) {
 

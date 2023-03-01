@@ -1,0 +1,560 @@
+.data
+a:	.word	0
+b:	.word	0
+c:	.word	0
+d:	.word	0
+e:	.word	0
+i:	.word	0
+str_0:	.asciiz	"glo_i = "
+str_1:	.asciiz	"\n"
+str_2:	.asciiz	"sum = "
+str_3:	.asciiz	"\n"
+str_4:	.asciiz	"main_i = "
+str_5:	.asciiz	"\n"
+str_6:	.asciiz	""
+str_7:	.asciiz	"\n"
+
+.text
+li $fp, 268697600
+j main
+
+func0:
+Function_func0_BasicBlock_2:
+	lw $t0, 0($fp)
+	sw $t0, 8($fp)
+	lw $t0, 4($fp)
+	sw $t0, 12($fp)
+	li $t0, 0
+	sw $t0, 16($fp)
+	li $t0, 128
+	sw $t0, 20($fp)
+	lw $t0, 8($fp)
+	sw $t0, 24($fp)
+	lw $t0, 12($fp)
+	sw $t0, 28($fp)
+	lw $t0, 24($fp)
+	lw $t1, 28($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 32($fp)
+	lw $t0, 20($fp)
+	sw $t0, 36($fp)
+	lw $t0, 32($fp)
+	lw $t1, 36($fp)
+	div $t0, $t1
+	mfhi $t2
+	sw $t2, 40($fp)
+	lw $v0, 40($fp)
+	jr $ra
+
+func1:
+Function_func1_BasicBlock_1:
+	lw $t0, 0($fp)
+	sw $t0, 4($fp)
+	lw $t0, i
+	sw $t0, 8($fp)
+	lw $t0, 8($fp)
+	li $t1, 1
+	addu $t2, $t0, $t1
+	sw $t2, 12($fp)
+	lw $t0, 12($fp)
+	sw $t0, i
+	lw $t0, i
+	sw $t0, 16($fp)
+	lw $v0, 16($fp)
+	jr $ra
+
+func2:
+Function_func2_BasicBlock_2:
+	lw $t0, 0($fp)
+	sw $t0, 8($fp)
+	lw $t0, 4($fp)
+	sw $t0, 12($fp)
+	lw $t0, 8($fp)
+	sw $t0, 16($fp)
+	lw $t0, 12($fp)
+	sw $t0, 20($fp)
+	lw $t0, 16($fp)
+	lw $t1, 20($fp)
+	div $t0, $t1
+	mfhi $t2
+	sw $t2, 24($fp)
+	lw $t0, 24($fp)
+	li $t1, 0
+	seq $t2, $t0, $t1
+	sw $t2, 28($fp)
+	lw $t0, 28($fp)
+	beq $t0, 1, Function_func2_BasicBlock_5
+	j Function_func2_BasicBlock_6
+Function_func2_BasicBlock_5:
+	li $v0, 1
+	jr $ra
+Function_func2_BasicBlock_6:
+	li $v0, 0
+	jr $ra
+
+func3:
+Function_func3_BasicBlock_0:
+	lw $t0, i
+	sw $t0, 0($fp)
+	la $t0, str_0
+	li $t1, 0
+	mulu $t2, $t1, 36
+	addu $t3, $t0, $t2
+	li $t4, 0
+	mulu $t5, $t4, 4
+	addu $t6, $t3, $t5
+	subu $t7, $t6, $fp
+	sw $t7, 4($fp)
+	li $v0, 4
+	lw $t1, 4($fp)
+	addu $a0, $t1, $fp
+	syscall
+	li $v0, 1
+	lw $a0, 0($fp)
+	syscall
+	la $t0, str_1
+	li $t1, 0
+	mulu $t2, $t1, 8
+	addu $t3, $t0, $t2
+	li $t4, 0
+	mulu $t5, $t4, 4
+	addu $t6, $t3, $t5
+	subu $t7, $t6, $fp
+	sw $t7, 8($fp)
+	li $v0, 4
+	lw $t1, 8($fp)
+	addu $a0, $t1, $fp
+	syscall
+	li $t0, 1906
+	sw $t0, 32($fp)
+	j Function_func3_BasicBlock_10
+Function_func3_BasicBlock_10:
+	lw $t0, i
+	sw $t0, 36($fp)
+	lw $t0, 36($fp)
+	li $t1, 10000
+	slt $t2, $t0, $t1
+	sw $t2, 40($fp)
+	lw $t0, 40($fp)
+	beq $t0, 1, Function_func3_BasicBlock_11
+	j Function_func3_BasicBlock_12
+Function_func3_BasicBlock_11:
+	lw $t0, a
+	sw $t0, 48($fp)
+	lw $t0, 48($fp)
+	li $t1, 4
+	mulu $t2, $t0, $t1
+	sw $t2, 52($fp)
+	lw $t0, 52($fp)
+	li $t1, 32
+	mulu $t2, $t0, $t1
+	sw $t2, 56($fp)
+	lw $t0, a
+	sw $t0, 60($fp)
+	lw $t0, 56($fp)
+	lw $t1, 60($fp)
+	mulu $t2, $t0, $t1
+	sw $t2, 64($fp)
+	lw $t0, a
+	sw $t0, 68($fp)
+	lw $t0, 64($fp)
+	lw $t1, 68($fp)
+	div $t0, $t1
+	mflo $t2
+	sw $t2, 72($fp)
+	lw $t0, 72($fp)
+	li $t1, 32
+	div $t0, $t1
+	mflo $t2
+	sw $t2, 76($fp)
+	lw $t0, 76($fp)
+	sw $t0, 44($fp)
+	lw $t0, b
+	sw $t0, 80($fp)
+	lw $t0, 44($fp)
+	sw $t0, 84($fp)
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	lw $t0, 80($fp)
+	sw $t0, 88($fp)
+	lw $t0, 84($fp)
+	sw $t0, 92($fp)
+	addi $fp, $fp, 88
+	jal func0
+	addi $fp, $fp, -88
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	sw $v0, 88($fp)
+	lw $t0, 88($fp)
+	sw $t0, b
+	lw $t0, a
+	sw $t0, 92($fp)
+	lw $t0, 92($fp)
+	li $t1, 4
+	mulu $t2, $t0, $t1
+	sw $t2, 96($fp)
+	lw $t0, b
+	sw $t0, 100($fp)
+	lw $t0, 96($fp)
+	lw $t1, 100($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 104($fp)
+	lw $t0, c
+	sw $t0, 108($fp)
+	lw $t0, 104($fp)
+	lw $t1, 108($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 112($fp)
+	lw $t0, 112($fp)
+	sw $t0, 12($fp)
+	lw $t0, a
+	sw $t0, 116($fp)
+	lw $t0, 116($fp)
+	li $t1, 4
+	mulu $t2, $t0, $t1
+	sw $t2, 120($fp)
+	lw $t0, b
+	sw $t0, 124($fp)
+	lw $t0, 120($fp)
+	lw $t1, 124($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 128($fp)
+	lw $t0, c
+	sw $t0, 132($fp)
+	lw $t0, 128($fp)
+	lw $t1, 132($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 136($fp)
+	lw $t0, d
+	sw $t0, 140($fp)
+	lw $t0, 136($fp)
+	lw $t1, 140($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 144($fp)
+	lw $t0, 144($fp)
+	sw $t0, 16($fp)
+	lw $t0, a
+	sw $t0, 148($fp)
+	lw $t0, 148($fp)
+	li $t1, 4
+	mulu $t2, $t0, $t1
+	sw $t2, 152($fp)
+	lw $t0, b
+	sw $t0, 156($fp)
+	lw $t0, 152($fp)
+	lw $t1, 156($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 160($fp)
+	lw $t0, c
+	sw $t0, 164($fp)
+	lw $t0, 160($fp)
+	lw $t1, 164($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 168($fp)
+	lw $t0, d
+	sw $t0, 172($fp)
+	lw $t0, 168($fp)
+	lw $t1, 172($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 176($fp)
+	lw $t0, e
+	sw $t0, 180($fp)
+	lw $t0, 176($fp)
+	lw $t1, 180($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 184($fp)
+	lw $t0, 184($fp)
+	sw $t0, 20($fp)
+	lw $t0, a
+	sw $t0, 188($fp)
+	lw $t0, 188($fp)
+	li $t1, 4
+	mulu $t2, $t0, $t1
+	sw $t2, 192($fp)
+	lw $t0, b
+	sw $t0, 196($fp)
+	lw $t0, 192($fp)
+	lw $t1, 196($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 200($fp)
+	lw $t0, c
+	sw $t0, 204($fp)
+	lw $t0, 200($fp)
+	lw $t1, 204($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 208($fp)
+	lw $t0, d
+	sw $t0, 212($fp)
+	lw $t0, 208($fp)
+	lw $t1, 212($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 216($fp)
+	lw $t0, e
+	sw $t0, 220($fp)
+	lw $t0, 216($fp)
+	lw $t1, 220($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 224($fp)
+	lw $t0, 224($fp)
+	sw $t0, 24($fp)
+	lw $t0, a
+	sw $t0, 228($fp)
+	lw $t0, 228($fp)
+	li $t1, 4
+	mulu $t2, $t0, $t1
+	sw $t2, 232($fp)
+	lw $t0, b
+	sw $t0, 236($fp)
+	lw $t0, 232($fp)
+	lw $t1, 236($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 240($fp)
+	lw $t0, c
+	sw $t0, 244($fp)
+	lw $t0, 240($fp)
+	lw $t1, 244($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 248($fp)
+	lw $t0, d
+	sw $t0, 252($fp)
+	lw $t0, 248($fp)
+	lw $t1, 252($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 256($fp)
+	lw $t0, e
+	sw $t0, 260($fp)
+	lw $t0, 256($fp)
+	lw $t1, 260($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 264($fp)
+	lw $t0, 264($fp)
+	sw $t0, 28($fp)
+	lw $t0, i
+	sw $t0, 268($fp)
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	lw $t0, 268($fp)
+	sw $t0, 272($fp)
+	li $t0, 1000
+	sw $t0, 276($fp)
+	addi $fp, $fp, 272
+	jal func2
+	addi $fp, $fp, -272
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	sw $v0, 272($fp)
+	lw $t0, 272($fp)
+	li $t1, 0
+	sne $t2, $t0, $t1
+	sw $t2, 276($fp)
+	lw $t0, 276($fp)
+	beq $t0, 1, Function_func3_BasicBlock_71
+	j Function_func3_BasicBlock_72
+Function_func3_BasicBlock_12:
+	lw $t0, 12($fp)
+	sw $t0, 280($fp)
+	lw $t0, 16($fp)
+	sw $t0, 284($fp)
+	lw $t0, 280($fp)
+	lw $t1, 284($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 288($fp)
+	lw $t0, 20($fp)
+	sw $t0, 292($fp)
+	lw $t0, 288($fp)
+	lw $t1, 292($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 296($fp)
+	lw $t0, 24($fp)
+	sw $t0, 300($fp)
+	lw $t0, 296($fp)
+	lw $t1, 300($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 304($fp)
+	lw $t0, 28($fp)
+	sw $t0, 308($fp)
+	lw $t0, 304($fp)
+	lw $t1, 308($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 312($fp)
+	lw $v0, 312($fp)
+	jr $ra
+Function_func3_BasicBlock_71:
+	lw $t0, 12($fp)
+	sw $t0, 316($fp)
+	lw $t0, 16($fp)
+	sw $t0, 320($fp)
+	lw $t0, 316($fp)
+	lw $t1, 320($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 324($fp)
+	lw $t0, 20($fp)
+	sw $t0, 328($fp)
+	lw $t0, 324($fp)
+	lw $t1, 328($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 332($fp)
+	lw $t0, 24($fp)
+	sw $t0, 336($fp)
+	lw $t0, 332($fp)
+	lw $t1, 336($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 340($fp)
+	lw $t0, 28($fp)
+	sw $t0, 344($fp)
+	lw $t0, 340($fp)
+	lw $t1, 344($fp)
+	addu $t2, $t0, $t1
+	sw $t2, 348($fp)
+	la $t0, str_2
+	li $t1, 0
+	mulu $t2, $t1, 28
+	addu $t3, $t0, $t2
+	li $t4, 0
+	mulu $t5, $t4, 4
+	addu $t6, $t3, $t5
+	subu $t7, $t6, $fp
+	sw $t7, 352($fp)
+	li $v0, 4
+	lw $t1, 352($fp)
+	addu $a0, $t1, $fp
+	syscall
+	li $v0, 1
+	lw $a0, 348($fp)
+	syscall
+	la $t0, str_3
+	li $t1, 0
+	mulu $t2, $t1, 8
+	addu $t3, $t0, $t2
+	li $t4, 0
+	mulu $t5, $t4, 4
+	addu $t6, $t3, $t5
+	subu $t7, $t6, $fp
+	sw $t7, 356($fp)
+	li $v0, 4
+	lw $t1, 356($fp)
+	addu $a0, $t1, $fp
+	syscall
+	j Function_func3_BasicBlock_72
+Function_func3_BasicBlock_72:
+	lw $t0, i
+	sw $t0, 360($fp)
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	lw $t0, 360($fp)
+	sw $t0, 364($fp)
+	addi $fp, $fp, 364
+	jal func1
+	addi $fp, $fp, -364
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	sw $v0, 364($fp)
+	j Function_func3_BasicBlock_10
+
+main:
+Function_main_BasicBlock_0:
+	li $t0, 0
+	sw $t0, 0($fp)
+	li $v0, 5
+	syscall
+	sw $v0, 4($fp)
+	lw $t0, 4($fp)
+	sw $t0, a
+	li $v0, 5
+	syscall
+	sw $v0, 8($fp)
+	lw $t0, 8($fp)
+	sw $t0, b
+	li $v0, 5
+	syscall
+	sw $v0, 12($fp)
+	lw $t0, 12($fp)
+	sw $t0, c
+	li $v0, 5
+	syscall
+	sw $v0, 16($fp)
+	lw $t0, 16($fp)
+	sw $t0, d
+	li $v0, 5
+	syscall
+	sw $v0, 20($fp)
+	lw $t0, 20($fp)
+	sw $t0, e
+	li $v0, 5
+	syscall
+	sw $v0, 24($fp)
+	lw $t0, 24($fp)
+	sw $t0, 0($fp)
+	lw $t0, 0($fp)
+	sw $t0, 28($fp)
+	la $t0, str_4
+	li $t1, 0
+	mulu $t2, $t1, 40
+	addu $t3, $t0, $t2
+	li $t4, 0
+	mulu $t5, $t4, 4
+	addu $t6, $t3, $t5
+	subu $t7, $t6, $fp
+	sw $t7, 32($fp)
+	li $v0, 4
+	lw $t1, 32($fp)
+	addu $a0, $t1, $fp
+	syscall
+	li $v0, 1
+	lw $a0, 28($fp)
+	syscall
+	la $t0, str_5
+	li $t1, 0
+	mulu $t2, $t1, 8
+	addu $t3, $t0, $t2
+	li $t4, 0
+	mulu $t5, $t4, 4
+	addu $t6, $t3, $t5
+	subu $t7, $t6, $fp
+	sw $t7, 36($fp)
+	li $v0, 4
+	lw $t1, 36($fp)
+	addu $a0, $t1, $fp
+	syscall
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	addi $fp, $fp, 40
+	jal func3
+	addi $fp, $fp, -40
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	sw $v0, 40($fp)
+	la $t0, str_6
+	li $t1, 0
+	mulu $t2, $t1, 4
+	addu $t3, $t0, $t2
+	li $t4, 0
+	mulu $t5, $t4, 4
+	addu $t6, $t3, $t5
+	subu $t7, $t6, $fp
+	sw $t7, 44($fp)
+	li $v0, 4
+	lw $t1, 44($fp)
+	addu $a0, $t1, $fp
+	syscall
+	li $v0, 1
+	lw $a0, 40($fp)
+	syscall
+	la $t0, str_7
+	li $t1, 0
+	mulu $t2, $t1, 8
+	addu $t3, $t0, $t2
+	li $t4, 0
+	mulu $t5, $t4, 4
+	addu $t6, $t3, $t5
+	subu $t7, $t6, $fp
+	sw $t7, 48($fp)
+	li $v0, 4
+	lw $t1, 48($fp)
+	addu $a0, $t1, $fp
+	syscall
+	li $v0, 0
+	li $v0, 10
+	syscall
+
+

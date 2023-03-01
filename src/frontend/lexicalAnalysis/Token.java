@@ -42,19 +42,22 @@ public class Token {
         Pattern identPattern = Pattern.compile(Ident.PATTERN);
         Matcher identMatcher = identPattern.matcher(codeBuffer);
         if (identMatcher.find(index) && identMatcher.start() == index) {
-            Pattern reservedPattern = Pattern.compile(Reserved.PATTERN);
-            Matcher reservedMatcher = reservedPattern.matcher(codeBuffer);
-            if (reservedMatcher.find(index) && reservedMatcher.start() == index
-                    && reservedMatcher.end() == identMatcher.end()) {
-                String values = reservedMatcher.group(0);
-                Word word = new Reserved(Reserved.reservedWords.get(values), values, lineNumber);
-                index = reservedMatcher.end();
+            String value = identMatcher.group(0);
+            if (!value.equals("bitand")) {
+                Pattern reservedPattern = Pattern.compile(Reserved.PATTERN);
+                Matcher reservedMatcher = reservedPattern.matcher(codeBuffer);
+                if (reservedMatcher.find(index) && reservedMatcher.start() == index
+                        && reservedMatcher.end() == identMatcher.end()) {
+                    String values = reservedMatcher.group(0);
+                    Word word = new Reserved(Reserved.reservedWords.get(values), values, lineNumber);
+                    index = reservedMatcher.end();
+                    return word;
+                }
+                String values = identMatcher.group(0);
+                Word word = new Ident(CategoryCode.IDENFR, values, lineNumber);
+                index = identMatcher.end();
                 return word;
             }
-            String values = identMatcher.group(0);
-            Word word = new Ident(CategoryCode.IDENFR, values, lineNumber);
-            index = identMatcher.end();
-            return word;
         }
 
         Pattern separatorPattern = Pattern.compile(Separator.PATTERN);

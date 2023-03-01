@@ -1,0 +1,218 @@
+@a = global i32 0
+@b = global i32 0
+@c = global i32 0
+@d = global i32 0
+@e = global i32 0
+@i = global i32 0
+@str_0 = constant [9 x i8] c"glo_i = \00"
+@str_1 = constant [2 x i8] c"\0A\00"
+@str_2 = constant [7 x i8] c"sum = \00"
+@str_3 = constant [2 x i8] c"\0A\00"
+@str_4 = constant [10 x i8] c"main_i = \00"
+@str_5 = constant [2 x i8] c"\0A\00"
+@str_6 = constant [1 x i8] c"\00"
+@str_7 = constant [2 x i8] c"\0A\00"
+
+declare i32 @getint() 
+declare void @putint(i32) 
+declare void @putch(i32) 
+declare void @putstr(i8*) 
+
+define i32 @func0(i32 %_0, i32 %_1) {
+Function_func0_BasicBlock_2:
+	%_3 = alloca i32
+	store i32 %_0, i32* %_3
+	%_4 = alloca i32
+	store i32 %_1, i32* %_4
+	%_5 = alloca i32
+	store i32 0, i32* %_5
+	%_6 = alloca i32
+	store i32 128, i32* %_6
+	%_7 = load i32, i32* %_3
+	%_8 = load i32, i32* %_4
+	%_9 = add i32 %_7, %_8
+	%_10 = load i32, i32* %_6
+	%_11 = srem i32 %_9, %_10
+	ret i32 %_11
+}
+
+define i32 @func1(i32 %_0) {
+Function_func1_BasicBlock_1:
+	%_2 = alloca i32
+	store i32 %_0, i32* %_2
+	%_3 = load i32, i32* @i
+	%_4 = add i32 %_3, 1
+	store i32 %_4, i32* @i
+	%_5 = load i32, i32* @i
+	ret i32 %_5
+}
+
+define i32 @func2(i32 %_0, i32 %_1) {
+Function_func2_BasicBlock_2:
+	%_3 = alloca i32
+	store i32 %_0, i32* %_3
+	%_4 = alloca i32
+	store i32 %_1, i32* %_4
+	%_7 = load i32, i32* %_3
+	%_8 = load i32, i32* %_4
+	%_9 = srem i32 %_7, %_8
+	%_10 = icmp eq i32 %_9, 0
+	br i1 %_10, label %Function_func2_BasicBlock_5, label %Function_func2_BasicBlock_6
+Function_func2_BasicBlock_5:
+	ret i32 1
+Function_func2_BasicBlock_6:
+	ret i32 0
+}
+
+define i32 @func3() {
+Function_func3_BasicBlock_0:
+	%_1 = load i32, i32* @i
+	%_2 = getelementptr inbounds [9 x i8], [9 x i8]* @str_0, i32 0, i32 0
+	call void @putstr(i8* %_2)
+	call void @putint(i32 %_1)
+	%_3 = getelementptr inbounds [2 x i8], [2 x i8]* @str_1, i32 0, i32 0
+	call void @putstr(i8* %_3)
+	%_4 = alloca i32
+	%_5 = alloca i32
+	%_6 = alloca i32
+	%_7 = alloca i32
+	%_8 = alloca i32
+	%_9 = alloca i32
+	store i32 1906, i32* %_9
+	br label %Function_func3_BasicBlock_10
+Function_func3_BasicBlock_10:
+	%_13 = load i32, i32* @i
+	%_14 = icmp slt i32 %_13, 10000
+	br i1 %_14, label %Function_func3_BasicBlock_11, label %Function_func3_BasicBlock_12
+Function_func3_BasicBlock_11:
+	%_15 = alloca i32
+	%_16 = load i32, i32* @a
+	%_17 = mul i32 %_16, 4
+	%_18 = mul i32 %_17, 32
+	%_19 = load i32, i32* @a
+	%_20 = mul i32 %_18, %_19
+	%_21 = load i32, i32* @a
+	%_22 = sdiv i32 %_20, %_21
+	%_23 = sdiv i32 %_22, 32
+	store i32 %_23, i32* %_15
+	%_24 = load i32, i32* @b
+	%_25 = load i32, i32* %_15
+	%_26 = call i32 @func0(i32 %_24, i32 %_25)
+	store i32 %_26, i32* @b
+	%_27 = load i32, i32* @a
+	%_28 = mul i32 %_27, 4
+	%_29 = load i32, i32* @b
+	%_30 = add i32 %_28, %_29
+	%_31 = load i32, i32* @c
+	%_32 = add i32 %_30, %_31
+	store i32 %_32, i32* %_4
+	%_33 = load i32, i32* @a
+	%_34 = mul i32 %_33, 4
+	%_35 = load i32, i32* @b
+	%_36 = add i32 %_34, %_35
+	%_37 = load i32, i32* @c
+	%_38 = add i32 %_36, %_37
+	%_39 = load i32, i32* @d
+	%_40 = add i32 %_38, %_39
+	store i32 %_40, i32* %_5
+	%_41 = load i32, i32* @a
+	%_42 = mul i32 %_41, 4
+	%_43 = load i32, i32* @b
+	%_44 = add i32 %_42, %_43
+	%_45 = load i32, i32* @c
+	%_46 = add i32 %_44, %_45
+	%_47 = load i32, i32* @d
+	%_48 = add i32 %_46, %_47
+	%_49 = load i32, i32* @e
+	%_50 = add i32 %_48, %_49
+	store i32 %_50, i32* %_6
+	%_51 = load i32, i32* @a
+	%_52 = mul i32 %_51, 4
+	%_53 = load i32, i32* @b
+	%_54 = add i32 %_52, %_53
+	%_55 = load i32, i32* @c
+	%_56 = add i32 %_54, %_55
+	%_57 = load i32, i32* @d
+	%_58 = add i32 %_56, %_57
+	%_59 = load i32, i32* @e
+	%_60 = add i32 %_58, %_59
+	store i32 %_60, i32* %_7
+	%_61 = load i32, i32* @a
+	%_62 = mul i32 %_61, 4
+	%_63 = load i32, i32* @b
+	%_64 = add i32 %_62, %_63
+	%_65 = load i32, i32* @c
+	%_66 = add i32 %_64, %_65
+	%_67 = load i32, i32* @d
+	%_68 = add i32 %_66, %_67
+	%_69 = load i32, i32* @e
+	%_70 = add i32 %_68, %_69
+	store i32 %_70, i32* %_8
+	%_73 = load i32, i32* @i
+	%_74 = call i32 @func2(i32 %_73, i32 1000)
+	%_75 = icmp ne i32 %_74, 0
+	br i1 %_75, label %Function_func3_BasicBlock_71, label %Function_func3_BasicBlock_72
+Function_func3_BasicBlock_12:
+	%_89 = load i32, i32* %_4
+	%_90 = load i32, i32* %_5
+	%_91 = add i32 %_89, %_90
+	%_92 = load i32, i32* %_6
+	%_93 = add i32 %_91, %_92
+	%_94 = load i32, i32* %_7
+	%_95 = add i32 %_93, %_94
+	%_96 = load i32, i32* %_8
+	%_97 = add i32 %_95, %_96
+	ret i32 %_97
+Function_func3_BasicBlock_71:
+	%_76 = load i32, i32* %_4
+	%_77 = load i32, i32* %_5
+	%_78 = add i32 %_76, %_77
+	%_79 = load i32, i32* %_6
+	%_80 = add i32 %_78, %_79
+	%_81 = load i32, i32* %_7
+	%_82 = add i32 %_80, %_81
+	%_83 = load i32, i32* %_8
+	%_84 = add i32 %_82, %_83
+	%_85 = getelementptr inbounds [7 x i8], [7 x i8]* @str_2, i32 0, i32 0
+	call void @putstr(i8* %_85)
+	call void @putint(i32 %_84)
+	%_86 = getelementptr inbounds [2 x i8], [2 x i8]* @str_3, i32 0, i32 0
+	call void @putstr(i8* %_86)
+	br label %Function_func3_BasicBlock_72
+Function_func3_BasicBlock_72:
+	%_87 = load i32, i32* @i
+	%_88 = call i32 @func1(i32 %_87)
+	br label %Function_func3_BasicBlock_10
+}
+
+define i32 @main() {
+Function_main_BasicBlock_0:
+	%_1 = alloca i32
+	store i32 0, i32* %_1
+	%_2 = call i32 @getint()
+	store i32 %_2, i32* @a
+	%_3 = call i32 @getint()
+	store i32 %_3, i32* @b
+	%_4 = call i32 @getint()
+	store i32 %_4, i32* @c
+	%_5 = call i32 @getint()
+	store i32 %_5, i32* @d
+	%_6 = call i32 @getint()
+	store i32 %_6, i32* @e
+	%_7 = call i32 @getint()
+	store i32 %_7, i32* %_1
+	%_8 = load i32, i32* %_1
+	%_9 = getelementptr inbounds [10 x i8], [10 x i8]* @str_4, i32 0, i32 0
+	call void @putstr(i8* %_9)
+	call void @putint(i32 %_8)
+	%_10 = getelementptr inbounds [2 x i8], [2 x i8]* @str_5, i32 0, i32 0
+	call void @putstr(i8* %_10)
+	%_11 = call i32 @func3()
+	%_12 = getelementptr inbounds [1 x i8], [1 x i8]* @str_6, i32 0, i32 0
+	call void @putstr(i8* %_12)
+	call void @putint(i32 %_11)
+	%_13 = getelementptr inbounds [2 x i8], [2 x i8]* @str_7, i32 0, i32 0
+	call void @putstr(i8* %_13)
+	ret i32 0
+}
+

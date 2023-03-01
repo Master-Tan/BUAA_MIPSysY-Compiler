@@ -55,7 +55,7 @@ public class Compiler {
             System.err.println(error.getKey() + " " + error.getValue());
         }
 
-        System.setErr(systemErr);
+//        System.setErr(systemErr);
 
         if (errors.size() > 0) {
             System.err.println("has error!");

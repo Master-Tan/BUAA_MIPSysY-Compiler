@@ -32,4 +32,5 @@ public class InitValNode extends Node {
     public ArrayList<InitValNode> getInitValNodes() {
         return initValNodes;
     }
+
 }

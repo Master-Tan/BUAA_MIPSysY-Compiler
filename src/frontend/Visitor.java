@@ -1,5 +1,6 @@
 package frontend;
 
+import exceptions.SysYException;
 import frontend.grammaticalAnalysis.grammatical.*;
 import frontend.grammaticalAnalysis.grammatical.Stmt.*;
 import frontend.lexicalAnalysis.lexical.Word;
@@ -13,6 +14,7 @@ import midend.ir.values.instructions.memory.Getelementptr;
 import midend.ir.values.instructions.memory.Load;
 import midend.ir.values.instructions.terminator.Br;
 import midend.ir.values.instructions.terminator.Ret;
+import myclasses.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -252,17 +254,29 @@ public class Visitor {
     }
 
     /*
-        变量定义 VarDef → Ident { '[' ConstExp ']' } | Ident { '[' ConstExp ']' } '=' InitVal
+        变量定义 VarDef → Ident { '[' ConstExp ']' } | Ident { '[' ConstExp ']' } '=' InitVal | Ident '=' 'getint' '(' ')'
      */
     public void visitVarDef(VarDefNode varDefNode) {
         Word ident = varDefNode.getIdent();
         ArrayList<ConstExpNode> constExpNodes = varDefNode.getConstExpNodes();
         InitValNode initValNode = varDefNode.getInitValNode();
+        boolean isGetint = varDefNode.isGetint();
 
         String varName = ident.getWordValue();
         if (constExpNodes.isEmpty()) {
             if (symbolValIndex == 0) {
-                if (initValNode == null) {
+                if (isGetint) {
+//                    isGlobalInit = true;
+//                    // 函数调用
+//                    String funcName = "getint";
+//                    Function calledFunction = Module.getInstance().getFunction("@" + funcName);
+//                    ArrayList<Value> args = new ArrayList<>();
+//                    currentValue = IRPort.buildCallWithReturn(currentBasicBlock, calledFunction, args);
+//                    isGlobalInit = false;
+//                    GlobalVariable globalVariable = IRPort.getGlobalVariable(varName, (Constant) currentValue, false);
+//                    symbolVal.get(symbolValIndex).put(varName, globalVariable);
+//                    Module.getInstance().addGlobalVariable(globalVariable);
+                } else if (initValNode == null) {
                     GlobalVariable globalVariable = IRPort.getZeroGlobalVariable(varName, IRPort.getIntType(32));
                     symbolVal.get(symbolValIndex).put(varName, globalVariable);
                     Module.getInstance().addGlobalVariable(globalVariable);
@@ -277,7 +291,16 @@ public class Visitor {
             } else {
                 Alloca alloca = IRPort.buildAlloca(IRPort.getIntType(32), currentBasicBlock);
                 symbolVal.get(symbolValIndex).put(varName, alloca);
-                if (initValNode != null) {
+                if (isGetint) {
+                    // 函数调用
+                    String funcName = "getint";
+                    Function calledFunction = Module.getInstance().getFunction("@" + funcName);
+                    ArrayList<Value> args = new ArrayList<>();
+
+                    currentValue = IRPort.buildCallWithReturn(currentBasicBlock, calledFunction, args);
+
+                    IRPort.buildStore(currentBasicBlock, currentValue, alloca);
+                } else if (initValNode != null) {
                     visitInitVal(initValNode);
                     IRPort.buildStore(currentBasicBlock, currentValue, alloca);
                 }
@@ -305,6 +328,15 @@ public class Visitor {
                     Module.getInstance().addGlobalVariable(globalVariable);
                 } else {
                     currentDimensions = new ArrayList<>(dimensions);
+
+                    if (constExpNodes.size() == 1) {
+                        if (dimensions.get(0) != initValNode.getInitValNodes().size()) {
+                            Pair error = new Pair<>(ident.getLineNumber(), SysYException.ExceptionCode.g);
+                            System.err.println(error.getKey() + " " + error.getValue());
+                            System.exit(0);
+                        }
+                    }
+
                     isGlobalInit = true;
                     visitInitVal(initValNode);
                     isGlobalInit = false;
@@ -355,6 +387,14 @@ public class Visitor {
                 if (initValNode != null) {
                     currentDimensions = new ArrayList<>(dimensions);
                     visitInitVal(initValNode);
+
+                    if (constExpNodes.size() == 1) {
+                        if (dimensions.get(0) != initValNode.getInitValNodes().size()) {
+                            Pair error = new Pair<>(ident.getLineNumber(), SysYException.ExceptionCode.g);
+                            System.err.println(error.getKey() + " " + error.getValue());
+                            System.exit(0);
+                        }
+                    }
 
                     ArrayList<Value> valArray = new ArrayList<>();
 
@@ -1149,8 +1189,10 @@ public class Visitor {
                     currentValue = IRPort.buildMul(currentBasicBlock, leftOp, currentValue);
                 } else if (separator.isDiv()) {
                     currentValue = IRPort.buildSdiv(currentBasicBlock, leftOp, currentValue);
-                } else {
+                } else if (separator.isMod()){
                     currentValue = IRPort.buildSrem(currentBasicBlock, leftOp, currentValue);
+                } else {
+                    currentValue = IRPort.buildAnd(currentBasicBlock, leftOp, currentValue);
                 }
             } else {
                 visitUnaryExp(unaryExpNode);
